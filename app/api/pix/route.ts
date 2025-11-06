@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PARADISE_BASE_URL = "https://multi.paradisepags.com/api/v1";
-const PARADISE_RECIPIENT_ID =
-  process.env.PARADISE_RECIPIENT_ID || "store_0afec61ca149d854";
-const PARADISE_SECRET_KEY =
-  process.env.PARADISE_SECRET_KEY ||
-  "sk_1024d231bf209bf83fbaf43e6c39d8034f82cea4c0c348558e0fc762a6648cd9";
-const PARADISE_PRODUCT_HASH =
-  process.env.PARADISE_PRODUCT_HASH || "produto_default";
+// Configurações da API Oasify
+const OASIFY_BASE_URL = "https://app.oasyfy.com/api/v1";
+const OASIFY_PUBLIC_KEY =
+  process.env.OASIFY_PUBLIC_KEY || "agenciahumanize7_jyennx1cpl3gzcpa";
+const OASIFY_SECRET_KEY =
+  process.env.OASIFY_SECRET_KEY ||
+  "tg4hv8tfsoz70yfsqynpmhw6lufkbuk4t4wqdwgybwy04kcl6w9qf8l0bw6gsm9s";
 
-function buildParadiseHeaders() {
+function buildOasifyHeaders() {
   return {
     "Content-Type": "application/json",
-    "X-API-Key": PARADISE_SECRET_KEY,
+    "x-public-key": OASIFY_PUBLIC_KEY,
+    "x-secret-key": OASIFY_SECRET_KEY,
   } satisfies Record<string, string>;
 }
 
@@ -47,11 +47,11 @@ function generatePhone(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { value, description: bodyDescription } = body;
+    const { value, description: bodyDescription, name, email } = body;
 
     // Validação dos dados recebidos
     const description = bodyDescription || "Pagamento Laranjinha Midias";
-    // Accept either decimal reais (e.g. 19.9 or 0.04) OR integer centavos (e.g. 1990)
+
     if (value === undefined || value === null) {
       return NextResponse.json(
         { error: "Campo value é obrigatório" },
@@ -68,30 +68,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If value looks like reais decimal (less than, say, 1000), interpret as reais and convert to cents
-    // If value is already a large integer (>1000), assume it's cents
-    let valueInCents: number;
+    // Oasify espera valor em reais (decimal), não centavos
+    let amountInReais: number;
     if (incomingNumber > 1000) {
-      // probably already in cents
-      valueInCents = Math.round(incomingNumber);
+      // Se for maior que 1000, assume que é em centavos e converte para reais
+      amountInReais = Number((incomingNumber / 100).toFixed(2));
     } else {
-      // treat as reais decimal
-      // Use truncation to avoid rounding up small fractional-cent values.
-      // e.g. 0.1990 * 100 = 19.9 -> trunc -> 19 (centavos)
-      valueInCents = Math.trunc(incomingNumber * 100);
+      // Se for menor, assume que já está em reais
+      amountInReais = Number(incomingNumber.toFixed(2));
     }
 
-    // Minimum validation: manter valor mínimo de 1 real para evitar rejeições
-    if (valueInCents < 100) {
+    // Validação de valor mínimo
+    if (amountInReais < 1) {
       console.log(
-        "/api/pix POST - rejected: valueInCents < 100 (1 real)",
-        valueInCents
+        "/api/pix POST - rejected: amountInReais < 1.00",
+        amountInReais
       );
-      return new NextResponse(
-        JSON.stringify({ error: "Valor minimo permitido: 1.00" }),
-        {
-          status: 400,
-        }
+      return NextResponse.json(
+        { error: "Valor mínimo permitido: R$ 1,00" },
+        { status: 400 }
       );
     }
 
@@ -101,40 +96,43 @@ export async function POST(request: NextRequest) {
       value,
       "parsed:",
       incomingNumber,
-      "cents:",
-      valueInCents
+      "reais:",
+      amountInReais
     );
 
-    const amount = Number((valueInCents / 100).toFixed(2));
+    // Gerar identificador único para a transação
+    const identifier = `laranjinha-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}`;
 
-    // Preparar payload para Paradise API
+    // Preparar payload para Oasify API
     const requestBody = {
-      amount: valueInCents, // Paradise espera valor em centavos
-      description: description || "Pagamento Laranjinha Midias Premium",
-      reference: `laranjinha-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 10)}`,
-      productHash: PARADISE_PRODUCT_HASH,
-      customer: {
-        name: "Cliente Laranjinha",
-        email: `cliente${Date.now()}@laranjinha.com`,
+      identifier: identifier,
+      amount: amountInReais,
+      client: {
+        name: name || "Cliente Laranjinha",
+        email: email || `cliente${Date.now()}@laranjinha.com`,
         document: generateCpf(),
         phone: generatePhone(),
       },
+      metadata: {
+        description: description,
+        source: "laranjinha-midias",
+      },
     };
 
-    console.log("Paradise API request:", {
+    console.log("Oasify API request:", {
       ...requestBody,
-      amount: `${valueInCents} cents (R$ ${amount})`,
+      amount: `R$ ${amountInReais.toFixed(2)}`,
     });
 
-    const response = await fetch(`${PARADISE_BASE_URL}/transaction.php`, {
+    const response = await fetch(`${OASIFY_BASE_URL}/gateway/pix/receive`, {
       method: "POST",
-      headers: buildParadiseHeaders(),
+      headers: buildOasifyHeaders(),
       body: JSON.stringify(requestBody),
     });
 
-    console.log("Paradise API response status:", response.status);
+    console.log("Oasify API response status:", response.status);
 
     const text = await response.text();
     let data: any = null;
@@ -145,12 +143,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!response.ok) {
-      console.log(`/api/pix POST - Paradise error status: ${response.status}`);
-      console.log(`/api/pix POST - Paradise error response:`, text);
+      console.log(`/api/pix POST - Oasify error status: ${response.status}`);
+      console.log(`/api/pix POST - Oasify error response:`, text);
 
       let errorMessage = "Erro ao gerar pagamento PIX";
       if (response.status === 400) {
-        errorMessage = "Dados inválidos enviados";
+        errorMessage = data?.message || "Dados inválidos enviados";
       } else if (response.status === 401) {
         errorMessage = "Credenciais inválidas";
       } else if (response.status === 500) {
@@ -161,29 +159,19 @@ export async function POST(request: NextRequest) {
         {
           error: errorMessage,
           status: response.status,
-          remote: text,
-        },
-        { status: 502 }
-      );
-    }
-
-    console.log("Paradise API response data:", data);
-
-    // Verificar se a resposta foi bem-sucedida
-    if (data?.status !== "success") {
-      return NextResponse.json(
-        {
-          error: "Erro ao gerar pagamento PIX",
           remote: data,
         },
         { status: 502 }
       );
     }
 
-    // Extrair dados da resposta Paradise
-    const qr_code = data?.qr_code || null;
-    const qr_code_base64 = data?.qr_code_base64 || null;
-    const transactionId = data?.transaction_id || data?.id || null;
+    console.log("Oasify API response data:", data);
+
+    // Extrair dados da resposta Oasify
+    const transactionId = data?.transactionId || data?.id || null;
+    const pixData = data?.pix || {};
+    const qr_code = pixData?.code || pixData?.qrCode || null;
+    const qr_code_base64 = pixData?.base64 || pixData?.qrCodeBase64 || null;
 
     // Se não há QR code, retorna erro
     if (!qr_code && !qr_code_base64) {
@@ -212,22 +200,25 @@ export async function POST(request: NextRequest) {
           )}`;
         }
       } catch (e) {
+        console.error("Erro ao gerar QR code base64:", e);
         resolved_qr_code_base64 = null;
       }
     }
 
-    const createdAt = data?.createdAt || new Date().toISOString();
-    const expiresAt =
-      data?.expiresAt || new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    const status = data?.status || "pending";
+    // Calcular data de expiração (15 minutos a partir de agora)
+    const createdAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const status = data?.status || "PENDING";
+    const valueInCents = Math.round(amountInReais * 100);
 
     return NextResponse.json({
       id: transactionId,
+      identifier: identifier,
       qr_code,
       qr_code_base64: resolved_qr_code_base64,
       amount_cents: valueInCents,
-      amount: amount,
-      amount_formatted: amount.toFixed(2).replace(".", ","),
+      amount: amountInReais,
+      amount_formatted: amountInReais.toFixed(2).replace(".", ","),
       created_at: createdAt,
       status: status,
       expires_at: expiresAt,
@@ -251,34 +242,52 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  const identifier = searchParams.get("identifier");
 
-  if (!id) {
+  if (!id && !identifier) {
     return NextResponse.json(
-      { error: "ID do pagamento é obrigatório" },
+      { error: "ID ou identifier do pagamento é obrigatório" },
       { status: 400 }
     );
   }
 
   try {
-    console.log(`/api/pix GET - checking payment status for ID: ${id}`);
+    console.log(
+      `/api/pix GET - checking payment status for ID: ${id || identifier}`
+    );
+
+    // Construir URL com parâmetros de query
+    const queryParams = new URLSearchParams();
+    if (id) queryParams.append("id", id);
+    if (identifier) queryParams.append("clientIdentifier", identifier);
 
     const response = await fetch(
-      `${PARADISE_BASE_URL}/query.php?action=get_transaction&id=${id}`,
+      `${OASIFY_BASE_URL}/gateway/transactions?${queryParams.toString()}`,
       {
         method: "GET",
-        headers: buildParadiseHeaders(),
+        headers: buildOasifyHeaders(),
       }
     );
 
-    console.log(`/api/pix GET - Paradise response status: ${response.status}`);
+    console.log(`/api/pix GET - Oasify response status: ${response.status}`);
 
     if (response.status === 200) {
       const data = await response.json();
       console.log(
-        `/api/pix GET - Paradise response data:`,
+        `/api/pix GET - Oasify response data:`,
         JSON.stringify(data, null, 2)
       );
-      return NextResponse.json(data);
+
+      // Normalizar o status da resposta
+      const normalizedData = {
+        ...data,
+        status: data.status || "PENDING",
+        payment: {
+          status: data.status || "PENDING",
+        },
+      };
+
+      return NextResponse.json(normalizedData);
     } else {
       let errorData: any = { message: "Unknown error" };
       try {
@@ -288,7 +297,7 @@ export async function GET(request: NextRequest) {
         errorData = { message: text || "Erro desconhecido na API" };
       }
       console.log(
-        `/api/pix GET - Paradise error response:`,
+        `/api/pix GET - Oasify error response:`,
         JSON.stringify(errorData, null, 2)
       );
       return NextResponse.json(
