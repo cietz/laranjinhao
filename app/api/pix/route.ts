@@ -1,25 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Configurações da API Oasify
-const OASIFY_BASE_URL = "https://app.oasyfy.com/api/v1";
-const OASIFY_PUBLIC_KEY =
-  process.env.OASIFY_PUBLIC_KEY || "agenciahumanize7_jyennx1cpl3gzcpa";
-const OASIFY_SECRET_KEY =
-  process.env.OASIFY_SECRET_KEY ||
-  "tg4hv8tfsoz70yfsqynpmhw6lufkbuk4t4wqdwgybwy04kcl6w9qf8l0bw6gsm9s";
+const OASYFY_BASE_URL = "https://app.oasyfy.com/api/v1";
+const OASYFY_PUBLIC_KEY = process.env.OASYFY_PUBLIC_KEY;
+const OASYFY_SECRET_KEY = process.env.OASYFY_SECRET_KEY;
 
-function buildOasifyHeaders() {
+function ensureOasyfyCredentials() {
+  if (!OASYFY_PUBLIC_KEY || !OASYFY_SECRET_KEY) {
+    throw new Error("Credenciais da Oasyfy ausentes");
+  }
+}
+
+function buildOasyfyHeaders() {
+  ensureOasyfyCredentials();
+  if (!OASYFY_PUBLIC_KEY || !OASYFY_SECRET_KEY) {
+    throw new Error("Credenciais da Oasyfy ausentes");
+  }
   return {
+    Accept: "application/json",
     "Content-Type": "application/json",
-    "x-public-key": OASIFY_PUBLIC_KEY,
-    "x-secret-key": OASIFY_SECRET_KEY,
+    "x-public-key": OASYFY_PUBLIC_KEY,
+    "x-secret-key": OASYFY_SECRET_KEY,
   } satisfies Record<string, string>;
 }
 
+function safeString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function generateCpf(): string {
+  // Gera os 9 primeiros dígitos aleatórios
   const digits = Array.from({ length: 9 }, () =>
     Math.floor(Math.random() * 10)
   );
+
+  // Calcula o primeiro dígito verificador
   let sum = 0;
   for (let i = 0; i < 9; i++) {
     sum += digits[i] * (10 - i);
@@ -27,6 +41,8 @@ function generateCpf(): string {
   let remainder = sum % 11;
   const digit1 = remainder < 2 ? 0 : 11 - remainder;
   digits.push(digit1);
+
+  // Calcula o segundo dígito verificador
   sum = 0;
   for (let i = 0; i < 10; i++) {
     sum += digits[i] * (11 - i);
@@ -34,24 +50,53 @@ function generateCpf(): string {
   remainder = sum % 11;
   const digit2 = remainder < 2 ? 0 : 11 - remainder;
   digits.push(digit2);
+
   return digits.join("");
 }
 
 function generatePhone(): string {
-  const ddd = Math.floor(Math.random() * 90) + 10;
-  const first = Math.floor(Math.random() * 90000) + 10000;
-  const second = Math.floor(Math.random() * 9000) + 1000;
-  return `${ddd}9${first}${second}`;
+  const ddd = Math.floor(Math.random() * 90) + 10; // dois dígitos entre 10 e 99
+  const first = Math.floor(Math.random() * 9000) + 1000; // 4 dígitos
+  const second = Math.floor(Math.random() * 9000) + 1000; // 4 dígitos
+  return `+55${ddd}9${first}${second}`;
+}
+async function randomPersonName() {
+  const names = [
+    "Ana",
+    "Bruno",
+    "Carla",
+    "Daniel",
+    "Eduarda",
+    "Felipe",
+    "Gabriela",
+    "Henrique",
+  ];
+  return names[Math.floor(Math.random() * names.length)];
+}
+async function randomEmail() {
+  const domains = ["example.com", "test.com", "demo.com", "sample.com"];
+  const name = Math.random().toString(36).substring(2, 10);
+  return `${name}@${domains[Math.floor(Math.random() * domains.length)]}`;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { value, description: bodyDescription, name, email } = body;
+    const {
+      value,
+      metadata,
+      name: bodyName,
+      email: bodyEmail,
+      description: bodyDescription,
+      webhook_url: bodyWebhook,
+    } = body;
 
     // Validação dos dados recebidos
-    const description = bodyDescription || "Pagamento Laranjinha Midias";
-
+    const webhook_url = bodyWebhook || "https://imperiovips.com/webhook/";
+    const description = bodyDescription || "Pagamento via Oasyfy";
+    const name = bodyName || (await randomPersonName());
+    const email = bodyEmail || (await randomEmail());
+    // Accept either decimal reais (e.g. 19.9 or 0.04) OR integer centavos (e.g. 1990)
     if (value === undefined || value === null) {
       return NextResponse.json(
         { error: "Campo value é obrigatório" },
@@ -68,123 +113,200 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Oasify espera valor em reais (decimal), não centavos
-    let amountInReais: number;
+    // If value looks like reais decimal (less than, say, 1000), interpret as reais and convert to cents
+    // If value is already a large integer (>1000), assume it's cents
+    let valueInCents: number;
     if (incomingNumber > 1000) {
-      // Se for maior que 1000, assume que é em centavos e converte para reais
-      amountInReais = Number((incomingNumber / 100).toFixed(2));
+      // probably already in cents
+      valueInCents = Math.round(incomingNumber);
     } else {
-      // Se for menor, assume que já está em reais
-      amountInReais = Number(incomingNumber.toFixed(2));
+      // treat as reais decimal
+      // Use truncation to avoid rounding up small fractional-cent values.
+      // e.g. 0.1990 * 100 = 19.9 -> trunc -> 19 (centavos)
+      valueInCents = Math.trunc(incomingNumber * 100);
     }
 
-    // Validação de valor mínimo
-    if (amountInReais < 1) {
+    // Minimum validation: manter valor mínimo de 3 reais para evitar rejeições
+    // NOTE: Ajuste se o provedor aceitar valores menores
+    if (valueInCents < 300) {
+      // 3 reais = 300 centavos
       console.log(
-        "/api/pix POST - rejected: amountInReais < 1.00",
-        amountInReais
+        "/api/pix POST - rejected: valueInCents < 300 (3 reais)",
+        valueInCents
       );
-      return NextResponse.json(
-        { error: "Valor mínimo permitido: R$ 1,00" },
-        { status: 400 }
+      return new NextResponse(
+        JSON.stringify({ error: "Valor minimo permitido: 3.00" }),
+        {
+          status: 400,
+        }
       );
     }
 
-    // Debug log
+    // Debug log to confirm incoming value from frontend (raw and normalized cents)
     console.log(
       "/api/pix POST received value (raw):",
       value,
       "parsed:",
       incomingNumber,
-      "reais:",
-      amountInReais
+      "cents:",
+      valueInCents
     );
+    if (!name || !email || !description || !webhook_url) {
+      return NextResponse.json(
+        { error: "Campos obrigatórios: name, email, description, webhook_url" },
+        { status: 400 }
+      );
+    }
 
-    // Gerar identificador único para a transação
-    const identifier = `laranjinha-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 10)}`;
+    const amount = Number((valueInCents / 100).toFixed(2));
+    const identifier =
+      safeString(metadata?.identifier) ||
+      `pix-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const clientIdentifier =
+      safeString(metadata?.clientIdentifier) || safeString(email) || identifier;
 
-    // Preparar payload para Oasify API
-    const requestBody = {
-      identifier: identifier,
-      amount: amountInReais,
-      client: {
-        name: name || "Cliente Laranjinha",
-        email: email || `cliente${Date.now()}@laranjinha.com`,
-        document: generateCpf(),
-        phone: generatePhone(),
-      },
-      metadata: {
-        description: description,
-        source: "laranjinha-midias",
-      },
+    const clientPayload: Record<string, unknown> = {
+      identifier: clientIdentifier,
+      name,
+      email,
     };
 
-    console.log("Oasify API request:", {
-      ...requestBody,
-      amount: `R$ ${amountInReais.toFixed(2)}`,
-    });
+    if (metadata && typeof metadata === "object") {
+      const candidateDocument = safeString((metadata as any).document);
+      const candidateDocumentType = safeString((metadata as any).documentType);
+      const candidatePhone = safeString((metadata as any).phone);
 
-    const response = await fetch(`${OASIFY_BASE_URL}/gateway/pix/receive`, {
+      if (candidateDocument) clientPayload.document = candidateDocument;
+      if (candidateDocumentType) {
+        clientPayload.documentType = candidateDocumentType;
+      }
+      if (candidatePhone) clientPayload.phone = candidatePhone;
+    }
+
+    if (!clientPayload.document) {
+      clientPayload.document = generateCpf();
+      clientPayload.documentType = "CPF";
+    }
+
+    if (!clientPayload.documentType) {
+      clientPayload.documentType = "CPF";
+    }
+
+    if (!clientPayload.phone) {
+      clientPayload.phone = generatePhone();
+    }
+
+    const normalizedMetadata = metadata === undefined ? {} : metadata;
+
+    const requestBody: Record<string, unknown> = {
+      identifier,
+      amount,
+      client: clientPayload,
+      metadata: normalizedMetadata,
+      callbackUrl: webhook_url,
+    };
+
+    if (description) {
+      requestBody.description = description;
+    }
+
+    const response = await fetch(`${OASYFY_BASE_URL}/gateway/pix/receive`, {
       method: "POST",
-      headers: buildOasifyHeaders(),
+      headers: buildOasyfyHeaders(),
       body: JSON.stringify(requestBody),
     });
 
-    console.log("Oasify API response status:", response.status);
+    console.log(
+      "Proxied request to Oasyfy with body value (reais):",
+      amount,
+      "status:",
+      response.status
+    );
 
     const text = await response.text();
     let data: any = null;
     try {
       data = text ? JSON.parse(text) : null;
     } catch (e) {
+      // response not JSON
       data = text;
     }
 
     if (!response.ok) {
-      console.log(`/api/pix POST - Oasify error status: ${response.status}`);
-      console.log(`/api/pix POST - Oasify error response:`, text);
+      console.log(`/api/pix POST - Oasyfy error status: ${response.status}`);
+      const errorText = text;
+      console.log(`/api/pix POST - Oasyfy error response:`, errorText);
 
       let errorMessage = "Erro ao gerar pagamento PIX";
       if (response.status === 400) {
-        errorMessage = data?.message || "Dados inválidos enviados";
+        errorMessage = "Dados inválidos enviados para Oasyfy";
       } else if (response.status === 401) {
         errorMessage = "Credenciais inválidas";
       } else if (response.status === 500) {
-        errorMessage = "Erro interno no gateway";
+        errorMessage = "Erro interno na Oasyfy";
       }
 
       return NextResponse.json(
         {
           error: errorMessage,
           status: response.status,
-          remote: data,
+          remote: errorText,
         },
         { status: 502 }
       );
     }
 
-    console.log("Oasify API response data:", data);
+    const pixInfo =
+      data?.pix ||
+      data?.order?.pix ||
+      data?.data?.pix ||
+      data?.order?.payment?.pix ||
+      data?.pixInformation;
 
-    // Extrair dados da resposta Oasify
-    const transactionId = data?.transactionId || data?.id || null;
-    const pixData = data?.pix || {};
-    const qr_code = pixData?.code || pixData?.qrCode || null;
-    const qr_code_base64 = pixData?.base64 || pixData?.qrCodeBase64 || null;
+    // Tentar extrair QR code de formas comuns que a API pode retornar
+    const qr_candidates = [
+      data?.qr_code,
+      data?.qrCode,
+      data?.qrcode,
+      data?.payload,
+      pixInfo?.payload,
+      pixInfo?.qrCode,
+      pixInfo?.copyAndPaste,
+      pixInfo?.emv,
+      pixInfo?.code,
+      data?.pix_qr,
+      data?.data?.qr_code,
+      data?.payment?.qr_code,
+      data?.pix?.qrcode,
+    ];
+    const qr_code =
+      qr_candidates.find((v) => typeof v === "string" && v.length > 0) || null;
 
-    // Se não há QR code, retorna erro
+    const b64_candidates = [
+      data?.qr_code_base64,
+      data?.qrCodeBase64,
+      data?.qr_code_base64_string,
+      data?.base64,
+      pixInfo?.image,
+      pixInfo?.imageBase64,
+      pixInfo?.qrCodeImage,
+      pixInfo?.payloadImage,
+    ];
+    const qr_code_base64 =
+      b64_candidates.find((v) => typeof v === "string" && v.length > 0) || null;
+
+    // Se não há QR nem base64, retorna erro com payload remoto
     if (!qr_code && !qr_code_base64) {
       return NextResponse.json(
         {
-          error: "QR Code não encontrado na resposta",
+          error: "QR Code não encontrado na resposta da Oasyfy",
           remote: data,
         },
         { status: 502 }
       );
     }
 
-    // Gerar imagem base64 do QR code se necessário
+    // Se não veio base64, gerar PNG do payload do QR e codificar em base64
     let resolved_qr_code_base64 = qr_code_base64;
     if (!resolved_qr_code_base64 && qr_code) {
       try {
@@ -194,33 +316,65 @@ export async function POST(request: NextRequest) {
         const qrResp = await fetch(qrApiUrl);
         if (qrResp.ok) {
           const arr = await qrResp.arrayBuffer();
+          // Buffer is available in Node runtime used by Next
           const buf = Buffer.from(arr);
           resolved_qr_code_base64 = `data:image/png;base64,${buf.toString(
             "base64"
           )}`;
         }
       } catch (e) {
-        console.error("Erro ao gerar QR code base64:", e);
+        // ignore - we'll return without base64
         resolved_qr_code_base64 = null;
       }
     }
 
-    // Calcular data de expiração (15 minutos a partir de agora)
-    const createdAt = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    const status = data?.status || "PENDING";
-    const valueInCents = Math.round(amountInReais * 100);
+    // Normalizar campos a partir do payload remoto
+    const normalizedId =
+      data?.transactionId ||
+      data?.id ||
+      data?.paymentId ||
+      data?.payment_id ||
+      data?.order?.id ||
+      data?.data?.paymentId ||
+      data?.data?.payment_id ||
+      data?.payment?.id ||
+      null;
+
+    const createdAt =
+      data?.createdAt ||
+      data?.order?.createdAt ||
+      data?.created_at ||
+      data?.data?.created_at ||
+      new Date().toISOString();
+
+    const expiresAt =
+      pixInfo?.expiresAt ||
+      data?.expiresAt ||
+      data?.expires_at ||
+      data?.data?.expires_at ||
+      new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    const normalizedStatus =
+      data?.status || data?.order?.status || data?.data?.status || "pending";
+
+    // Retorna valor em cents e em reais (número) e formatado para facilitar uso no frontend
+    const amount_cents = valueInCents;
+    const normalizedAmount =
+      typeof amount === "number" ? amount : amount_cents / 100;
+    const amount_formatted =
+      typeof normalizedAmount === "number"
+        ? normalizedAmount.toFixed(2).replace(".", ",")
+        : null;
 
     return NextResponse.json({
-      id: transactionId,
-      identifier: identifier,
+      id: normalizedId,
       qr_code,
       qr_code_base64: resolved_qr_code_base64,
-      amount_cents: valueInCents,
-      amount: amountInReais,
-      amount_formatted: amountInReais.toFixed(2).replace(".", ","),
+      amount_cents,
+      amount: normalizedAmount,
+      amount_formatted,
       created_at: createdAt,
-      status: status,
+      status: normalizedStatus,
       expires_at: expiresAt,
       raw: data,
     });
@@ -242,62 +396,43 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  const identifier = searchParams.get("identifier");
 
-  if (!id && !identifier) {
+  if (!id) {
     return NextResponse.json(
-      { error: "ID ou identifier do pagamento é obrigatório" },
+      { error: "ID do pagamento é obrigatório" },
       { status: 400 }
     );
   }
 
   try {
-    console.log(
-      `/api/pix GET - checking payment status for ID: ${id || identifier}`
-    );
+    console.log(`/api/pix GET - checking payment status for ID: ${id}`);
+    const statusUrl = new URL(`${OASYFY_BASE_URL}/gateway/transactions`);
+    statusUrl.searchParams.set("id", id);
 
-    // Construir URL com parâmetros de query
-    const queryParams = new URLSearchParams();
-    if (id) queryParams.append("id", id);
-    if (identifier) queryParams.append("clientIdentifier", identifier);
+    const response = await fetch(statusUrl.toString(), {
+      headers: buildOasyfyHeaders(),
+    });
 
-    const response = await fetch(
-      `${OASIFY_BASE_URL}/gateway/transactions?${queryParams.toString()}`,
-      {
-        method: "GET",
-        headers: buildOasifyHeaders(),
-      }
-    );
-
-    console.log(`/api/pix GET - Oasify response status: ${response.status}`);
+    console.log(`/api/pix GET - Oasyfy response status: ${response.status}`);
 
     if (response.status === 200) {
       const data = await response.json();
       console.log(
-        `/api/pix GET - Oasify response data:`,
+        `/api/pix GET - Oasyfy response data:`,
         JSON.stringify(data, null, 2)
       );
-
-      // Normalizar o status da resposta
-      const normalizedData = {
-        ...data,
-        status: data.status || "PENDING",
-        payment: {
-          status: data.status || "PENDING",
-        },
-      };
-
-      return NextResponse.json(normalizedData);
+      return NextResponse.json(data);
     } else {
       let errorData: any = { message: "Unknown error" };
       try {
         errorData = await response.json();
       } catch (jsonError) {
+        // Se não conseguir fazer parse do JSON, tenta pegar o texto
         const text = await response.text();
-        errorData = { message: text || "Erro desconhecido na API" };
+        errorData = { message: text || "Erro desconhecido na API externa" };
       }
       console.log(
-        `/api/pix GET - Oasify error response:`,
+        `/api/pix GET - Oasyfy error response:`,
         JSON.stringify(errorData, null, 2)
       );
       return NextResponse.json(
