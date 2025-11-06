@@ -1,40 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-async function randomPersonName() {
-  const names = [
-    "Ana",
-    "Bruno",
-    "Carla",
-    "Daniel",
-    "Eduarda",
-    "Felipe",
-    "Gabriela",
-    "Henrique",
-  ];
-  return names[Math.floor(Math.random() * names.length)];
+
+const PARADISE_BASE_URL = "https://multi.paradisepags.com/api/v1";
+const PARADISE_RECIPIENT_ID =
+  process.env.PARADISE_RECIPIENT_ID || "store_0afec61ca149d854";
+const PARADISE_SECRET_KEY =
+  process.env.PARADISE_SECRET_KEY ||
+  "sk_1024d231bf209bf83fbaf43e6c39d8034f82cea4c0c348558e0fc762a6648cd9";
+const PARADISE_PRODUCT_HASH =
+  process.env.PARADISE_PRODUCT_HASH || "produto_default";
+
+function buildParadiseHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "X-API-Key": PARADISE_SECRET_KEY,
+  } satisfies Record<string, string>;
 }
-async function randomEmail() {
-  const domains = ["example.com", "test.com", "demo.com", "sample.com"];
-  const name = Math.random().toString(36).substring(2, 10);
-  return `${name}@${domains[Math.floor(Math.random() * domains.length)]}`;
+
+function generateCpf(): string {
+  const digits = Array.from({ length: 9 }, () =>
+    Math.floor(Math.random() * 10)
+  );
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += digits[i] * (10 - i);
+  }
+  let remainder = sum % 11;
+  const digit1 = remainder < 2 ? 0 : 11 - remainder;
+  digits.push(digit1);
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += digits[i] * (11 - i);
+  }
+  remainder = sum % 11;
+  const digit2 = remainder < 2 ? 0 : 11 - remainder;
+  digits.push(digit2);
+  return digits.join("");
+}
+
+function generatePhone(): string {
+  const ddd = Math.floor(Math.random() * 90) + 10;
+  const first = Math.floor(Math.random() * 90000) + 10000;
+  const second = Math.floor(Math.random() * 9000) + 1000;
+  return `${ddd}9${first}${second}`;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      value,
-      metadata,
-      name: bodyName,
-      email: bodyEmail,
-      description: bodyDescription,
-      webhook_url: bodyWebhook,
-    } = body;
+    const { value, description: bodyDescription } = body;
 
     // Validação dos dados recebidos
-    const webhook_url = bodyWebhook || "https://imperiovips.com/webhook/";
-    const description = bodyDescription || "Pagamento via WiinPay";
-    const name = bodyName || (await randomPersonName());
-    const email = bodyEmail || (await randomEmail());
+    const description = bodyDescription || "Pagamento Laranjinha Midias";
     // Accept either decimal reais (e.g. 19.9 or 0.04) OR integer centavos (e.g. 1990)
     if (value === undefined || value === null) {
       return NextResponse.json(
@@ -65,23 +81,21 @@ export async function POST(request: NextRequest) {
       valueInCents = Math.trunc(incomingNumber * 100);
     }
 
-    // Minimum validation: WiinPay requires minimum 3 reais, but we'll allow smaller for testing
-    // NOTE: According to docs, minimum is 3 reais
-    if (valueInCents < 300) {
-      // 3 reais = 300 centavos
+    // Minimum validation: manter valor mínimo de 1 real para evitar rejeições
+    if (valueInCents < 100) {
       console.log(
-        "/api/pix POST - rejected: valueInCents < 300 (3 reais)",
+        "/api/pix POST - rejected: valueInCents < 100 (1 real)",
         valueInCents
       );
       return new NextResponse(
-        JSON.stringify({ error: "Valor minimo permitido: 3.00" }),
+        JSON.stringify({ error: "Valor minimo permitido: 1.00" }),
         {
           status: 400,
         }
       );
     }
 
-    // Debug log to confirm incoming value from frontend (raw and normalized cents)
+    // Debug log
     console.log(
       "/api/pix POST received value (raw):",
       value,
@@ -90,108 +104,99 @@ export async function POST(request: NextRequest) {
       "cents:",
       valueInCents
     );
-    if (!name || !email || !description || !webhook_url) {
-      return NextResponse.json(
-        { error: "Campos obrigatórios: name, email, description, webhook_url" },
-        { status: 400 }
-      );
-    }
 
-    const response = await fetch("https://api.wiinpay.com.br/payment/create", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+    const amount = Number((valueInCents / 100).toFixed(2));
+
+    // Preparar payload para Paradise API
+    const requestBody = {
+      amount: valueInCents, // Paradise espera valor em centavos
+      description: description || "Pagamento Laranjinha Midias Premium",
+      reference: `laranjinha-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 10)}`,
+      productHash: PARADISE_PRODUCT_HASH,
+      customer: {
+        name: "Cliente Laranjinha",
+        email: `cliente${Date.now()}@laranjinha.com`,
+        document: generateCpf(),
+        phone: generatePhone(),
       },
-      body: JSON.stringify({
-        api_key:
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cGVybWVnYWdhYmk2QGdtYWlsLmNvbSIsImlhdCI6MTc1ODI5MzU5NH0.b-KPzKvAAfN9L3-nDBNwy_kjSEAEpJxnnp1yOzb88ko",
-        // forward value in reais (decimal) to WiinPay
-        value: incomingNumber,
-        name,
-        email,
-        description,
-        webhook_url,
-        metadata: metadata || {},
-      }),
+    };
+
+    console.log("Paradise API request:", {
+      ...requestBody,
+      amount: `${valueInCents} cents (R$ ${amount})`,
     });
 
-    console.log(
-      "Proxied request to WiinPay with body value (reais):",
-      incomingNumber,
-      "status:",
-      response.status
-    );
+    const response = await fetch(`${PARADISE_BASE_URL}/transaction.php`, {
+      method: "POST",
+      headers: buildParadiseHeaders(),
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log("Paradise API response status:", response.status);
 
     const text = await response.text();
     let data: any = null;
     try {
       data = text ? JSON.parse(text) : null;
     } catch (e) {
-      // response not JSON
       data = text;
     }
 
     if (!response.ok) {
-      // According to docs, 201 = success, 422 = validation error, 401 = unauthorized, 500 = server error
-      console.log(`/api/pix POST - WiinPay error status: ${response.status}`);
-      const errorText = text;
-      console.log(`/api/pix POST - WiinPay error response:`, errorText);
+      console.log(`/api/pix POST - Paradise error status: ${response.status}`);
+      console.log(`/api/pix POST - Paradise error response:`, text);
 
       let errorMessage = "Erro ao gerar pagamento PIX";
-      if (response.status === 422) {
-        errorMessage = "Dados inválidos enviados para WiinPay";
+      if (response.status === 400) {
+        errorMessage = "Dados inválidos enviados";
       } else if (response.status === 401) {
-        errorMessage = "Chave API inválida";
+        errorMessage = "Credenciais inválidas";
       } else if (response.status === 500) {
-        errorMessage = "Erro interno na WiinPay";
+        errorMessage = "Erro interno no gateway";
       }
 
       return NextResponse.json(
         {
           error: errorMessage,
           status: response.status,
-          remote: errorText,
+          remote: text,
         },
         { status: 502 }
       );
     }
 
-    // Tentar extrair QR code de formas comuns que a API pode retornar
-    const qr_candidates = [
-      data?.qr_code,
-      data?.qrCode,
-      data?.qrcode,
-      data?.payload,
-      data?.pix?.qrcode,
-      data?.pix_qr,
-      data?.data?.qr_code,
-      data?.payment?.qr_code,
-    ];
-    const qr_code =
-      qr_candidates.find((v) => typeof v === "string" && v.length > 0) || null;
+    console.log("Paradise API response data:", data);
 
-    const b64_candidates = [
-      data?.qr_code_base64,
-      data?.qrCodeBase64,
-      data?.qr_code_base64_string,
-      data?.base64,
-    ];
-    const qr_code_base64 =
-      b64_candidates.find((v) => typeof v === "string" && v.length > 0) || null;
-
-    // Se não há QR nem base64, retorna erro com payload remoto
-    if (!qr_code && !qr_code_base64) {
+    // Verificar se a resposta foi bem-sucedida
+    if (data?.status !== "success") {
       return NextResponse.json(
         {
-          error: "QR Code não encontrado na resposta da WiinPay",
+          error: "Erro ao gerar pagamento PIX",
           remote: data,
         },
         { status: 502 }
       );
     }
 
-    // Se não veio base64, gerar PNG do payload do QR e codificar em base64
+    // Extrair dados da resposta Paradise
+    const qr_code = data?.qr_code || null;
+    const qr_code_base64 = data?.qr_code_base64 || null;
+    const transactionId = data?.transaction_id || data?.id || null;
+
+    // Se não há QR code, retorna erro
+    if (!qr_code && !qr_code_base64) {
+      return NextResponse.json(
+        {
+          error: "QR Code não encontrado na resposta",
+          remote: data,
+        },
+        { status: 502 }
+      );
+    }
+
+    // Gerar imagem base64 do QR code se necessário
     let resolved_qr_code_base64 = qr_code_base64;
     if (!resolved_qr_code_base64 && qr_code) {
       try {
@@ -201,53 +206,30 @@ export async function POST(request: NextRequest) {
         const qrResp = await fetch(qrApiUrl);
         if (qrResp.ok) {
           const arr = await qrResp.arrayBuffer();
-          // Buffer is available in Node runtime used by Next
           const buf = Buffer.from(arr);
           resolved_qr_code_base64 = `data:image/png;base64,${buf.toString(
             "base64"
           )}`;
         }
       } catch (e) {
-        // ignore - we'll return without base64
         resolved_qr_code_base64 = null;
       }
     }
 
-    // Normalizar campos a partir do payload remoto
-    const normalizedId =
-      data?.id ||
-      data?.paymentId ||
-      data?.payment_id ||
-      data?.data?.paymentId ||
-      data?.data?.payment_id ||
-      data?.payment?.id ||
-      null;
-
-    const createdAt =
-      data?.created_at || data?.data?.created_at || new Date().toISOString();
-
+    const createdAt = data?.createdAt || new Date().toISOString();
     const expiresAt =
-      data?.expires_at ||
-      data?.data?.expires_at ||
-      new Date(Date.now() + 15 * 60 * 1000).toISOString();
-
-    const normalizedStatus = data?.status || data?.data?.status || "pending";
-
-    // Retorna valor em cents e em reais (número) e formatado para facilitar uso no frontend
-    const amount_cents = valueInCents;
-    const amount = typeof amount_cents === "number" ? amount_cents / 100 : null;
-    const amount_formatted =
-      typeof amount === "number" ? amount.toFixed(2).replace(".", ",") : null;
+      data?.expiresAt || new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const status = data?.status || "pending";
 
     return NextResponse.json({
-      id: normalizedId,
+      id: transactionId,
       qr_code,
       qr_code_base64: resolved_qr_code_base64,
-      amount_cents,
-      amount,
-      amount_formatted,
+      amount_cents: valueInCents,
+      amount: amount,
+      amount_formatted: amount.toFixed(2).replace(".", ","),
       created_at: createdAt,
-      status: normalizedStatus,
+      status: status,
       expires_at: expiresAt,
       raw: data,
     });
@@ -279,22 +261,21 @@ export async function GET(request: NextRequest) {
 
   try {
     console.log(`/api/pix GET - checking payment status for ID: ${id}`);
+
     const response = await fetch(
-      `https://api.wiinpay.com.br/payment/list/${id}`,
+      `${PARADISE_BASE_URL}/query.php?action=get_transaction&id=${id}`,
       {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cGVybWVnYWdhYmk2QGdtYWlsLmNvbSIsImlhdCI6MTc1ODI5MzU5NH0.b-KPzKvAAfN9L3-nDBNwy_kjSEAEpJxnnp1yOzb88ko`,
-        },
+        method: "GET",
+        headers: buildParadiseHeaders(),
       }
     );
 
-    console.log(`/api/pix GET - WiinPay response status: ${response.status}`);
+    console.log(`/api/pix GET - Paradise response status: ${response.status}`);
 
     if (response.status === 200) {
       const data = await response.json();
       console.log(
-        `/api/pix GET - WiinPay response data:`,
+        `/api/pix GET - Paradise response data:`,
         JSON.stringify(data, null, 2)
       );
       return NextResponse.json(data);
@@ -303,12 +284,11 @@ export async function GET(request: NextRequest) {
       try {
         errorData = await response.json();
       } catch (jsonError) {
-        // Se não conseguir fazer parse do JSON, tenta pegar o texto
         const text = await response.text();
-        errorData = { message: text || "Erro desconhecido na API externa" };
+        errorData = { message: text || "Erro desconhecido na API" };
       }
       console.log(
-        `/api/pix GET - WiinPay error response:`,
+        `/api/pix GET - Paradise error response:`,
         JSON.stringify(errorData, null, 2)
       );
       return NextResponse.json(

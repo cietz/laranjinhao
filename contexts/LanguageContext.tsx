@@ -17,11 +17,11 @@ const translations = {
 
     // Main content
     "premium.unlock": "Torne-se usuário premium e desbloqueie mais de",
-    "models.medias": "3 mil modelos e 100 mil mídias exclusivas",
+    "models.medias": "16 mil modelos e 100 mil mídias exclusivas",
     "immediate.delivery": "no site. Entrega imediata.",
 
     // Premium plan
-    "monthly.plan": "Plano Mensal - R$ 19,90",
+    "monthly.plan": "Plano Mensal - R$ 5,00",
     "guarantee.refund": "30 dias de garantia • Reembolso total",
 
     // Search
@@ -57,11 +57,11 @@ const translations = {
 
     // Main content
     "premium.unlock": "Become a premium user and unlock more than",
-    "models.medias": "3 thousand models and 100 thousand exclusive medias",
+    "models.medias": "16 thousand models and 100 thousand exclusive medias",
     "immediate.delivery": "on the site. Immediate delivery.",
 
     // Premium plan
-    "monthly.plan": "Monthly Plan - $19.90",
+    "monthly.plan": "Monthly Plan - R$ 5.00",
     "guarantee.refund": "30 days guarantee • Full refund",
 
     // Search
@@ -97,11 +97,11 @@ const translations = {
 
     // Main content
     "premium.unlock": "Conviértete en usuario premium y desbloquea más de",
-    "models.medias": "3 mil modelos y 100 mil medios exclusivos",
+    "models.medias": "16 mil modelos y 100 mil medios exclusivos",
     "immediate.delivery": "en el sitio. Entrega inmediata.",
 
     // Premium plan
-    "monthly.plan": "Plan Mensual - $19.90",
+    "monthly.plan": "Plan Mensual - R$ 5.00",
     "guarantee.refund": "30 días de garantía • Reembolso total",
 
     // Search

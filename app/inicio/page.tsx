@@ -1,12 +1,10 @@
 "use client";
 import Image from "next/image";
 import Script from "next/script";
-import { ExternalLink, Shield, Check, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ExternalLink, Check, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageModal from "@/components/LanguageModal";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
@@ -14,8 +12,6 @@ import modelsData from "./modelos.json";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -52,53 +48,81 @@ const allModels = (modelsData as Model[])
 // COMPONENTE PRINCIPAL
 // ===================================================================
 
-export default function PrivacyBlackPage() {
+export default function LaranjinhaMidiasPage() {
   // Estados locais para controle da interface
   const [searchTerm, setSearchTerm] = useState(""); // Termo de pesquisa das modelos
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false); // Controle do modal de idiomas
   const [showHiddenProfile, setShowHiddenProfile] = useState(false); // Controle do card de perfil oculto
   const { t } = useLanguage(); // Hook para tradução de textos
 
-  const { isTelegramWebApp } = useTelegramWebApp(); // Hook para verificar se está no Telegram
+  useTelegramWebApp(); // mantém inicialização do hook
 
-  // Função para obter a URL correta baseada no contexto do Telegram
-  const getCheckoutUrl = () => {
-    const isTelegram = verifyIsTelegram();
-    return (isTelegram ? "/pagamento" : "/checkout") + window.location.search;
+  const getCurrentSearch = () =>
+    typeof window === "undefined" ? "" : window.location.search;
+
+  const buildSearchParams = (isTelegram: boolean) => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    const params = new URLSearchParams(getCurrentSearch());
+    if (isTelegram) {
+      params.set("istelegram", "true");
+    } else {
+      params.delete("istelegram");
+    }
+
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : "";
   };
 
-  // Filtro de modelos baseado na pesquisa do usuário
+  const verifyIsTelegram = () => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get("istelegram") === "true";
+  };
+
+  const getCheckoutUrl = () => {
+    const isTelegram = verifyIsTelegram();
+    return `${isTelegram ? "/pagamento" : "/checkout"}${buildSearchParams(
+      isTelegram
+    )}`;
+  };
+
+  const buildModelUrl = (modelId: number) => {
+    if (typeof window === "undefined") {
+      return `/modelos?id=${modelId}`;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("id", String(modelId));
+
+    if (verifyIsTelegram()) {
+      params.set("istelegram", "true");
+    } else {
+      params.delete("istelegram");
+    }
+
+    return `/modelos?${params.toString()}`;
+  };
+
+  const handleModelClick = (modelId: number) => {
+    window.location.href = buildModelUrl(modelId);
+  };
+
   const filteredModels = allModels.filter(
     (model) =>
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Função para navegar para a página da modelo
-  const handleModelClick = (modelId: number) => {
-    const isTelegram = verifyIsTelegram();
-    if (isTelegram) {
-      window.location.href = `/modelos?id=${modelId}&istelegram=true`;
-    } else {
-      window.location.href = `/modelos?id=${modelId}`;
-    }
-  };
-  const router = useRouter();
-  const verifyIsTelegram = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isTelegram = urlParams.get("istelegram");
-
-    if (isTelegram === "true") {
-      return true;
-    }
-    return false;
-  };
-
-  // Inicialização do VSL Player
   useEffect(() => {
     const video = document.getElementById(
       "paradisePlayer_1761246902292"
-    ) as HTMLVideoElement;
+    ) as HTMLVideoElement | null;
     const muteOverlay = document.getElementById(
       "paradisePlayer_1761246902292MuteOverlay"
     );
@@ -107,73 +131,69 @@ export default function PrivacyBlackPage() {
     );
     const ctaLink = document.getElementById(
       "paradisePlayer_1761246902292CTALink"
-    ) as HTMLAnchorElement;
+    ) as HTMLAnchorElement | null;
 
-    if (!video) return;
+    if (!video) {
+      return;
+    }
 
-    // Configuração de autoplay muted
     video.muted = true;
     video.playbackRate = 1;
 
     const playPromise = video.play();
     if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Autoplay prevented
-      });
+      playPromise.catch(() => undefined);
     }
 
-    // Handler do overlay de unmute
-    if (muteOverlay) {
-      const unmuteHandler = () => {
-        video.muted = false;
-        video.currentTime = 0;
-        video.play();
+    const handleUnmute = () => {
+      video.muted = false;
+      video.currentTime = 0;
+      video.play();
+      if (muteOverlay) {
         muteOverlay.style.opacity = "0";
         setTimeout(() => {
           muteOverlay.style.display = "none";
         }, 300);
-      };
+      }
+    };
 
-      muteOverlay.addEventListener("click", unmuteHandler, { once: true });
-      muteOverlay.addEventListener("touchend", unmuteHandler, { once: true });
+    if (muteOverlay) {
+      muteOverlay.addEventListener("click", handleUnmute, { once: true });
+      muteOverlay.addEventListener("touchend", handleUnmute, { once: true });
     }
 
-    // Click no vídeo para pausar/play
-    video.addEventListener("click", () => {
-      if (video.paused) video.play();
-      else video.pause();
-    });
-
-    // Setup UTM tracking para CTA
     if (ctaLink) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const utmKeys = [
-        "utm_source",
-        "utm_medium",
-        "utm_campaign",
-        "utm_term",
-        "utm_content",
-      ];
       const baseUrl = "https://compraseguraonline.org.ua/c/95feedbad3";
-
       try {
         const url = new URL(baseUrl);
+        const params = new URLSearchParams(getCurrentSearch());
+        const utmKeys = [
+          "utm_source",
+          "utm_medium",
+          "utm_campaign",
+          "utm_term",
+          "utm_content",
+        ];
+
         utmKeys.forEach((key) => {
-          if (urlParams.has(key)) {
-            url.searchParams.set(key, urlParams.get(key)!);
+          if (params.has(key)) {
+            url.searchParams.set(key, params.get(key)!);
           }
         });
+
         ctaLink.href = url.toString();
-      } catch (e) {
+      } catch (error) {
+        console.warn("Não foi possível aplicar UTMs ao CTA:", error);
         ctaLink.href = baseUrl;
       }
     }
 
-    // Mostrar CTA após 10 segundos
     const timeUpdateHandler = () => {
-      if (!ctaButton || !video.duration) return;
-      const ctaTime = 10;
+      if (!ctaButton || !video.duration) {
+        return;
+      }
 
+      const ctaTime = 10;
       if (video.currentTime >= ctaTime && ctaButton.style.display === "none") {
         ctaButton.style.display = "block";
         ctaButton.style.animation = "paradise-fadeInUp 0.5s ease-out forwards";
@@ -182,7 +202,6 @@ export default function PrivacyBlackPage() {
 
     video.addEventListener("timeupdate", timeUpdateHandler);
 
-    // Cleanup
     return () => {
       video.removeEventListener("timeupdate", timeUpdateHandler);
     };
@@ -190,10 +209,13 @@ export default function PrivacyBlackPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
         {/* =============================================================== */}
         {/* BANNER PROMOCIONAL - "TOP 1 do Brasil no Telegram" FIXO ABAIXO DO HEADER */}
-        <div className="w-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-300 fixed top-[65px] z-30">
+        <div
+          className="w-full transition-all duration-300 fixed top-[65px] z-30"
+          style={{ background: "#24A1DE" }}
+        >
           <div
             className="flex items-center justify-center gap-2 px-4 py-2.5 cursor-pointer"
             onClick={() => (window.location.href = getCheckoutUrl())}
@@ -209,36 +231,43 @@ export default function PrivacyBlackPage() {
                 d="M23.1117 4.49449C23.4296 2.94472 21.9074 1.65683 20.4317 2.227L2.3425 9.21601C0.694517 9.85273 0.621087 12.1572 2.22518 12.8975L6.1645 14.7157L8.03849 21.2746C8.13583 21.6153 8.40618 21.8791 8.74917 21.968C9.09216 22.0568 9.45658 21.9576 9.70712 21.707L12.5938 18.8203L16.6375 21.8531C17.8113 22.7334 19.5019 22.0922 19.7967 20.6549L23.1117 4.49449ZM3.0633 11.0816L21.1525 4.0926L17.8375 20.2531L13.1 16.6999C12.7019 16.4013 12.1448 16.4409 11.7929 16.7928L10.5565 18.0292L10.928 15.9861L18.2071 8.70703C18.5614 8.35278 18.5988 7.79106 18.2947 7.39293C17.9906 6.99479 17.4389 6.88312 17.0039 7.13168L6.95124 12.876L3.0633 11.0816ZM8.17695 14.4791L8.78333 16.6015L9.01614 15.321C9.05253 15.1209 9.14908 14.9366 9.29291 14.7928L11.5128 12.573L8.17695 14.4791Z"
               />
             </svg>
-            <span className="text-white text-xs font-medium text-center">
-              Tops Modelos do Privacy em conteúdo adulto
+            <span className="text-orange-50 text-xs font-medium text-center">
+              Tops Modelos da Laranjinha Midias em conteúdo adulto
             </span>
           </div>
         </div>
 
         {/* =============================================================== */}
         {/* HEADER PRINCIPAL - Logo, nome da marca e botão de idioma - FIXO NO TOPO */}
-        <header className="border-b border-gray-700 px-4 fixed top-0 z-40 h-[65px] flex items-center w-full bg-black">
+        <header className="border-b border-orange-800/60 px-4 fixed top-0 z-40 h-[65px] flex items-center w-full bg-orange-950">
           <div className="flex items-center justify-between w-full">
             {/* Espaço reservado à esquerda para balanceamento */}
             <div className="w-10 h-10" />
 
-            {/* Logo central com nome da marca Privacy Black */}
+            {/* Logo central com nome da marca Laranjinha Midias */}
             <div className="flex items-center justify-center flex-1">
               <button className="transition-all duration-200 hover:scale-105">
                 <div className="flex items-center gap-[0.3rem]">
                   <div className="flex items-center justify-center">
                     <img
-                      alt="Privacy Black Icon"
-                      width={32}
-                      height={32}
+                      alt="Laranjinha Midias Icon"
+                      width={52}
+                      height={52}
                       decoding="async"
                       className="object-contain"
-                      src="./image.png"
+                      src="./laranjinha.png"
                     />
                   </div>
                   <div className="flex flex-col">
                     <h1 className="text-2xl font-bold leading-tight italic font-['Poppins',sans-serif]">
-                      <span className="text-white">Privacy Black</span>
+                      <span
+                        className="text-orange-50"
+                        style={{
+                          fontFamily: "'Kawaii RT Mona Shine', cursive",
+                        }}
+                      >
+                        Laranjinha Midias
+                      </span>
                     </h1>
                   </div>
                 </div>
@@ -262,7 +291,7 @@ export default function PrivacyBlackPage() {
                   strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-gray-200"
+                  className="text-orange-100"
                 >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="2" y1="12" x2="22" y2="12" />
@@ -281,7 +310,7 @@ export default function PrivacyBlackPage() {
           {/* CHAMADA PRINCIPAL PARA PREMIUM - Texto motivacional */}
           {/* =============================================================== */}
           <div className="text-center mb-6 pt-2 px-4">
-            <p className="text-sm text-gray-200 leading-relaxed">
+            <p className="text-sm text-orange-100 leading-relaxed">
               {t("premium.unlock")} <br />
               <strong>{t("models.medias")}</strong>
               <br />
@@ -435,7 +464,7 @@ export default function PrivacyBlackPage() {
 
           <button
             onClick={() => (window.location.href = getCheckoutUrl())}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 hover:scale-105 shadow-lg"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg"
             type="button"
           >
             <svg
@@ -455,7 +484,7 @@ export default function PrivacyBlackPage() {
               <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
               <path d="M12 18V6" />
             </svg>
-            Plano Anual R$ 19,90
+            Plano Anual R$ 5,00
           </button>
 
           {/* =============================================================== */}
@@ -483,19 +512,19 @@ export default function PrivacyBlackPage() {
           {/* =============================================================== */}
           <div className="mb-2 mt-4">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-orange-200 w-4 h-4" />
               <Input
                 type="text"
                 placeholder={t("search.models")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-orange-500 rounded-full"
+                className="pr-10 bg-orange-900/70 border-orange-600/50 text-orange-50 placeholder:text-white focus:border-orange-400 rounded-full"
               />
             </div>
 
             {/* Contador de resultados da pesquisa */}
             {searchTerm && (
-              <p className="text-gray-200 text-sm mt-2">
+              <p className="text-orange-100 text-sm mt-2">
                 {filteredModels.length} {t("models.found")}
               </p>
             )}
@@ -504,9 +533,9 @@ export default function PrivacyBlackPage() {
           {/* =============================================================== */}
           {/* BANNER PREMIUM MODELS - Indicador de modelos no plano premium */}
           {/* =============================================================== */}
-          <div className="bg-black pt-2 py-4 border-t border-b border-gray-700 flex justify-center">
-            <div className="border-b-2 border-gray-900 pb-2 px-4">
-              <span className="font-medium text-white">
+          <div className="bg-orange-950/80 pt-2 py-4 border-t border-b border-orange-800/60 flex justify-center">
+            <div className="border-b-2 border-orange-700/60 pb-2 px-4">
+              <span className="font-medium text-orange-50">
                 +3.000 Modelos no Premium
               </span>
             </div>
@@ -520,7 +549,7 @@ export default function PrivacyBlackPage() {
               ? filteredModels.map((model, index) => (
                   <Card
                     key={index}
-                    className="bg-gray-50 border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                    className="bg-green-500/50 border-green-600/40 overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => handleModelClick(model.id)}
                   >
                     <div className="relative h-20 flex items-center">
@@ -528,7 +557,6 @@ export default function PrivacyBlackPage() {
                         className="absolute inset-0 bg-cover bg-center"
                         style={{ backgroundImage: `url(${model.bg})` }}
                       />
-                      <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                       <div className="relative z-10 flex items-center gap-3 p-4 w-full">
                         <div className="relative">
                           <Image
@@ -536,7 +564,7 @@ export default function PrivacyBlackPage() {
                             alt={model.name}
                             width={68}
                             height={64}
-                            className="rounded-full border-2 border-gray-300"
+                            className="rounded-full border-2 border-orange-200/60"
                           />
                           {model.verified && (
                             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
@@ -546,16 +574,18 @@ export default function PrivacyBlackPage() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-white">
+                            <h3 className="font-semibold text-orange-50">
                               {model.name}
                             </h3>
                             {model.verified && (
-                              <Check className="w-4 h-4 text-blue-500" />
+                              <Check className="w-4 h-4 text-blue-400" />
                             )}
                           </div>
-                          <p className="text-white text-sm">{model.username}</p>
+                          <p className="text-orange-100 text-sm">
+                            {model.username}
+                          </p>
                         </div>
-                        <ExternalLink className="w-5 h-5 text-white" />
+                        <ExternalLink className="w-5 h-5 text-orange-100" />
                       </div>
                     </div>
                   </Card>
@@ -566,7 +596,7 @@ export default function PrivacyBlackPage() {
                   <div className="text-center py-8 animate-in fade-in duration-500">
                     <div className="space-y-4">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="h-12 w-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                        <div className="h-12 w-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
@@ -577,7 +607,7 @@ export default function PrivacyBlackPage() {
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="h-6 w-6 text-white"
+                            className="h-6 w-6 text-orange-50"
                           >
                             <path
                               d="M2.062 12.348a1 1 0 0 1 0-.696 
@@ -589,10 +619,10 @@ export default function PrivacyBlackPage() {
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-white mb-1">
+                          <h3 className="text-lg font-semibold text-orange-50 mb-1">
                             Encontramos perfis ocultos!
                           </h3>
-                          <p className="text-sm text-gray-200">
+                          <p className="text-sm text-orange-100">
                             Descobrimos conteúdos ocultos relacionados à sua
                             busca desta modelo!
                           </p>
@@ -608,7 +638,7 @@ export default function PrivacyBlackPage() {
             <Dialog>
               <DialogTitle className="hidden">{t("want.more")}</DialogTitle>
               <DialogTrigger asChild>
-                <button className="flex items-center gap-4 px-12 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium rounded-full hover:from-orange-600 hover:to-red-600 transition-all duration-200 hover:scale-105 shadow-lg">
+                <button className="flex items-center gap-4 px-12 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-full hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -648,14 +678,13 @@ export default function PrivacyBlackPage() {
                   </svg>
                 </button>
               </DialogTrigger>
-              <DialogContent className="p-0 max-w-sm w-full bg-gray-900 rounded-xl border-0 shadow-lg">
-                <div className="relative overflow-hidden bg-gray-900 rounded-xl">
+              <DialogContent className="p-0 max-w-sm w-full bg-orange-950/95 rounded-xl border border-orange-700/40 shadow-lg">
+                <div className="relative overflow-hidden bg-orange-950/95 rounded-xl">
                   {/* Banner */}
                   <div className="relative h-32 w-full">
-                    <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-red-500 to-pink-500 blur-[15px] brightness-75 scale-[1.2]"></div>
-                    <div className="absolute inset-0 bg-black/40"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-600 via-green-500 to-green-600 blur-[15px] brightness-75 scale-[1.2]"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-white">
+                      <div className="text-center text-orange-50">
                         <svg
                           className="w-8 h-8 mx-auto mb-2 drop-shadow-lg"
                           fill="none"
@@ -682,7 +711,7 @@ export default function PrivacyBlackPage() {
 
                   {/* Avatar */}
                   <div className="absolute top-24 left-6 z-10">
-                    <div className="h-16 w-16 rounded-full border-4 border-white overflow-hidden relative">
+                    <div className="h-16 w-16 rounded-full border-4 border-orange-200/70 overflow-hidden relative">
                       <div
                         className="absolute inset-0 bg-cover bg-center blur-md brightness-75 scale-[1.1]"
                         style={{
@@ -690,10 +719,10 @@ export default function PrivacyBlackPage() {
                             "url('https://snewbnpytfvvjerythvw.supabase.co/storage/v1/object/public/model-images/profile_1748415578476_lb2fzagv_cropped_imagem_2025_05_28.jpg')",
                         }}
                       ></div>
-                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/30 to-red-500/30"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-500/30 to-green-600/30"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <svg
-                          className="w-6 h-6 text-white drop-shadow"
+                          className="w-6 h-6 text-orange-50 drop-shadow"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -717,7 +746,7 @@ export default function PrivacyBlackPage() {
                   <div className="pt-10 px-6 pb-6">
                     <div className="mb-4">
                       <div className="flex items-center gap-2 mb-1">
-                        <h2 className="text-xl font-bold text-white capitalize">
+                        <h2 className="text-xl font-bold text-orange-50 capitalize">
                           {searchTerm}
                         </h2>
                         <svg
@@ -728,11 +757,11 @@ export default function PrivacyBlackPage() {
                           <path d="M190.6 71.4C203 47.9 227.7 32 256 32s53 15.9 65.4 39.4c3.6 6.8 11.5 10.1 18.8 7.8c25.4-7.8 54.1-1.6 74.1 18.4s26.2 48.7 18.4 74.1c-2.3 7.3 1 15.2 7.8 18.8C464.1 203 480 227.7 480 256s-15.9 53-39.4 65.4c-6.8 3.6-10.1 11.5-7.8 18.8c7.8 25.4 1.6 54.1-18.4 74.1s-48.7 26.2-74.1 18.4c-7.3-2.3-15.2 1-18.8 7.8C309 464.1 284.3 480 256 480s-53-15.9-65.4-39.4c-3.6-6.8-11.5-10.1-18.8-7.8c-25.4 7.8-54.1 1.6-74.1-18.4s-26.2-48.7-18.4-74.1c2.3-7.3-1-15.2-7.8-18.8C47.9 309 32 284.3 32 256s15.9-53 39.4-65.4c6.8-3.6 10.1-11.5 7.8-18.8c-7.8-25.4-1.6-54.1 18.4-74.1s48.7-26.2 74.1-18.4c7.3 2.3 15.2-1 18.8-7.8zM363.3 203.3c6.2-6.2 6.2-16.4 0-22.6s-16.4-6.2-22.6 0L224 297.4l-52.7-52.7c-6.2-6.2-16.4-6.2-22.6 0s-6.2 16.4 0 22.6l64 64c6.2 6.2 16.4 6.2 22.6 0l128-128z" />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-200 mb-3">
+                      <p className="text-sm text-orange-100 mb-3">
                         @{searchTerm.toLowerCase()}
                       </p>
 
-                      <div className="bg-orange-900 border border-orange-600 rounded-lg p-4 text-sm text-orange-100">
+                      <div className="bg-green-900 border border-green-600 rounded-lg p-4 text-sm text-green-100">
                         <strong>Perfil Exclusivo Encontrado!</strong>
                         <br />
                         Encontramos um perfil oculto com{" "}
@@ -749,7 +778,7 @@ export default function PrivacyBlackPage() {
                         onClick={() =>
                           (window.location.href = getCheckoutUrl())
                         }
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-medium rounded-lg hover:scale-105 transition-all shadow-lg"
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:scale-105 transition-all shadow-lg"
                       >
                         <svg
                           className="w-4 h-4"
@@ -776,7 +805,7 @@ export default function PrivacyBlackPage() {
 
                       <button
                         onClick={() => setShowHiddenProfile(false)}
-                        className="px-4 py-2 text-sm text-gray-300 rounded-lg hover:bg-gray-800 transition"
+                        className="px-4 py-2 text-sm text-green-200 rounded-lg hover:bg-green-800/60 transition"
                       >
                         Fechar
                       </button>
@@ -791,11 +820,11 @@ export default function PrivacyBlackPage() {
           {/* CARD PREMIUM FINAL - Última chamada para assinatura premium */}
           {/* =============================================================== */}
           <div className="mt-8 mb-6">
-            <div className="rounded-lg border bg-card text-card-foreground overflow-hidden border-none bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-xl">
+            <div className="rounded-lg border border-orange-700/40 bg-gradient-to-br from-orange-950 via-orange-900 to-orange-950 text-orange-50 overflow-hidden shadow-xl">
               <div className="relative p-6">
                 {/* Background overlays */}
                 <div className="absolute inset-0 opacity-10">
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600"></div>
                   <div
                     className="absolute inset-0"
                     style={{
@@ -806,7 +835,7 @@ export default function PrivacyBlackPage() {
 
                 {/* Content */}
                 <div className="relative z-10 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full mb-4 shadow-lg">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full mb-4 shadow-lg">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width={24}
@@ -817,7 +846,7 @@ export default function PrivacyBlackPage() {
                       strokeWidth={2}
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="h-8 w-8 text-white"
+                      className="h-8 w-8 text-orange-50"
                       aria-hidden="true"
                     >
                       <rect
@@ -832,11 +861,11 @@ export default function PrivacyBlackPage() {
                     </svg>
                   </div>
 
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold text-orange-50 mb-2">
                     Quer ver mais modelos?
                   </h3>
 
-                  <p className="text-gray-200 text-sm mb-6 leading-relaxed max-w-sm mx-auto">
+                  <p className="text-orange-100 text-sm mb-6 leading-relaxed max-w-sm mx-auto">
                     Para acessar <strong>milhares de modelos exclusivas</strong>{" "}
                     e <strong>mais de 100 mil mídias premium</strong>, assine
                     nosso plano completo!
@@ -851,9 +880,9 @@ export default function PrivacyBlackPage() {
                     ].map((item) => (
                       <div
                         key={item}
-                        className="flex items-center gap-2 text-gray-200"
+                        className="flex items-center gap-2 text-orange-100"
                       >
-                        <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full"></div>
                         <span>{item}</span>
                       </div>
                     ))}
@@ -861,7 +890,7 @@ export default function PrivacyBlackPage() {
 
                   <button
                     onClick={() => (window.location.href = getCheckoutUrl())}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
                     type="button"
                   >
                     <svg
@@ -901,7 +930,7 @@ export default function PrivacyBlackPage() {
                     </svg>
                   </button>
 
-                  <p className="text-xs text-gray-400 mt-3">
+                  <p className="text-xs text-orange-200/80 mt-3">
                     30 dias de garantia • Acesso imediato
                   </p>
                 </div>

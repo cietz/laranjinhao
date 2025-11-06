@@ -33,7 +33,7 @@ export default function LanguageModal({ isOpen, onClose }: LanguageModalProps) {
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-white text-lg font-semibold">
               🌐 Idioma / Language
@@ -70,7 +70,7 @@ export default function LanguageModal({ isOpen, onClose }: LanguageModalProps) {
                 transition-all duration-200 hover:bg-gray-50
                 ${
                   language === lang.code
-                    ? "bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200"
+                    ? "bg-gradient-to-r from-green-50 to-green-50 border-2 border-green-200"
                     : "border-2 border-transparent hover:border-gray-100"
                 }
               `}
@@ -89,11 +89,11 @@ export default function LanguageModal({ isOpen, onClose }: LanguageModalProps) {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="text-orange-500"
+                      className="text-green-500"
                     >
                       <polyline points="20,6 9,17 4,12" />
                     </svg>
-                    <span className="text-sm text-orange-600 font-medium">
+                    <span className="text-sm text-green-600 font-medium">
                       {language === "pt"
                         ? "Selecionado"
                         : language === "en"

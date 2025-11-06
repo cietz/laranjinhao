@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Privacy Black",
+  title: "Laranjinha Midias",
   description: "Acesse milhares de modelos exclusivas e mídias premium",
   other: {
     "telegram-web-app": "true",

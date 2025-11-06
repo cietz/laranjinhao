@@ -24,9 +24,9 @@ export default function PresellPage() {
   // Mostra loading durante redirecionamento
   if (isRedirecting) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-900 via-orange-800 to-orange-900 flex items-center justify-center">
+        <div className="text-orange-50 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-200 mx-auto mb-4"></div>
           <p>Redirecionando...</p>
         </div>
       </div>
@@ -89,91 +89,89 @@ export default function PresellPage() {
         `}
       </Script>
 
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-2xl mx-auto text-center space-y-8">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-orange-100 to-amber-100 flex items-center justify-center p-4 text-orange-900">
+        <div className="max-w-2xl mx-auto text-center space-y-6">
           {/* Logo/Brand */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <Image
-                alt="Privacy Black Icon"
-                width={48}
-                height={48}
-                src="./image.png"
-                className="object-contain"
-              />
-              <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight italic font-['Poppins',sans-serif]">
-                Privacy Black
-              </h1>
-            </div>
-            <p className="text-gray-100 text-lg md:text-xl">
-              A melhor experiência em conteúdo premium do Brasil
+          <div className="space-y-2">
+            <h1
+              className="text-4xl md:text-5xl font-bold text-orange-900 tracking-tight"
+              style={{ fontFamily: "'Kawaii RT Mona Shine', cursive" }}
+            >
+              🍊 LARANJINHA MÍDIAS
+            </h1>
+            <p className="text-orange-800 text-lg md:text-xl font-semibold">
+              ACESSO COMPLETO PAGANDO UMA ÚNICA VEZ
             </p>
           </div>
 
           {/* Main Content */}
-          <div className="space-y-6">
-            <h2 className="text-2xl md:text-3xl font-semibold text-white">
-              Descubra mais de 3 mil modelos exclusivas
-            </h2>
-            <p className="text-gray-100 max-w-lg mx-auto leading-relaxed">
-              Mais de 100 mil mídias premium te esperando.
-            </p>
-
-            {/* Features preview */}
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto text-sm">
-              <div className="flex items-center gap-2 text-gray-100">
-                <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
-                <span>+3.000 Modelos</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-100">
-                <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
-                <span>+100 Mil Mídias</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-100">
-                <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
-                <span>Perfis Verificados</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-100">
-                <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
-                <span>Acesso Imediato</span>
-              </div>
+          <div className="space-y-4 text-left bg-white/50 p-6 rounded-2xl border border-orange-200 shadow-md">
+            <ul className="space-y-2">
+              <li className="flex items-center gap-2 text-gray-800 font-medium">
+                🔥 +3.000 MODELOS EXCLUSIVAS
+              </li>
+              <li className="flex items-center gap-2 text-gray-800 font-medium">
+                🔥 +100.000 MÍDIAS PREMIUM
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ✅ Perfis verificados
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ✅ Acesso imediato
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ✅ Tudo organizado por nome
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ✅ Vazados do Brasil vazam PRIMEIRO AQUI
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ✅ OnlyF4ns, CloseFriends, Priv4cy
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ✅ Incestos, fetiches e + 🔞
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                📦 +30 categorias
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                ♻️ Atualizações diárias
+              </li>
+            </ul>
+            <div className="text-sm text-center text-orange-800 bg-orange-100 p-3 rounded-lg">
+              <p>+18 garotas jovens, MILFs, orgias, flagrantes</p>
+              <p>Patricinhas, faveladinhas, famosas e amadoras</p>
             </div>
+            <p className="text-center font-bold text-orange-900 text-lg">
+              +4.000 MODELOS // MÍDIAS ÚNICAS
+            </p>
           </div>
 
           {/* CTA Button */}
-          <div className="pt-4 space-y-4">
+          <div className="pt-2 space-y-4">
             <Button
               size="lg"
-              className="px-12 py-4 text-lg font-medium bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="w-full px-12 py-6 text-xl font-bold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               onClick={() =>
                 (window.location.href =
                   (isTelegram ? "/inicio?istelegram=true" : "/inicio") +
                   window.location.search)
               }
             >
-              🔥 Entrar Agora
+              🚪 ENTRADA AUTOMÁTICA
             </Button>
 
             {/* Guarantee badge */}
-            <div className="bg-green-900 border border-green-500 rounded-full px-4 py-2 inline-block">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full flex items-center justify-center">
-                  <svg
-                    className="h-2 w-2 text-green-900"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
-                  </svg>
-                </div>
-                <span className="text-xs font-medium text-green-100">
-                  30 dias de garantia • Reembolso total
-                </span>
-              </div>
+            <div className="text-center text-orange-800 space-y-2">
+              <p className="font-semibold">Qual famosa você quer?</p>
+              <p className="text-sm">
+                MC Mirella // Virginia // Mel Maia // Jade Picon
+              </p>
+              <p className="font-bold text-lg text-orange-900">
+                CLICA E LIBERA TUDO AGORA 🍊
+              </p>
             </div>
           </div>
-
-          {/* Subtle accent */}
         </div>
       </div>
     </>

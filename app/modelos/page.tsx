@@ -131,11 +131,11 @@ const createPostItems = (modelData: ModelData) => {
   return items;
 };
 
-function PrivacyBlackPageContent() {
+function LaranjinhaMidiasPageContent() {
   const { t } = useLanguage();
 
   const searchParams = useSearchParams();
-  const { isTelegramWebApp } = useTelegramWebApp();
+  useTelegramWebApp();
   const [activeTab, setActiveTab] = useState<"posts" | "media">("media");
   const [activeFilter, setActiveFilter] = useState<"all" | "photos" | "videos">(
     "all"
@@ -146,19 +146,43 @@ function PrivacyBlackPageContent() {
     setIsPremiumModalOpen(true);
   };
   const router = useRouter();
-  const verifyIsTelegram = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isTelegram = urlParams.get("istelegram");
+  const getCurrentSearch = () =>
+    typeof window === "undefined" ? "" : window.location.search;
 
-    if (isTelegram === "true") {
+  const verifyIsTelegram = () => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const search = window.location.search || "";
+    if (search.startsWith("?istelegram=true")) {
       return true;
     }
-    return false;
+
+    const urlParams = new URLSearchParams(search);
+    return urlParams.get("istelegram") === "true";
+  };
+
+  const buildSearchParams = (isTelegram: boolean) => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    if (!isTelegram) {
+      return getCurrentSearch();
+    }
+
+    const params = new URLSearchParams(getCurrentSearch());
+    params.set("istelegram", "true");
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : "";
   };
   // Função para obter a URL correta baseada no contexto do Telegram
   const getCheckoutUrl = () => {
     const isTelegram = verifyIsTelegram();
-    return (isTelegram ? "/pagamento" : "/checkout") + window.location.search;
+    return `${isTelegram ? "/pagamento" : "/checkout"}${buildSearchParams(
+      isTelegram
+    )}`;
   };
   // Carrega os dados da modelo baseado no ID da URL
   useEffect(() => {
@@ -180,10 +204,10 @@ function PrivacyBlackPageContent() {
   // Se não há modelo carregada, mostra loading
   if (!currentModel) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-200">Carregando...</p>
+          <p className="text-orange-100">Carregando...</p>
         </div>
       </div>
     );
@@ -240,14 +264,14 @@ function PrivacyBlackPageContent() {
           });
         `}
       </Script>
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
         {/* Header de navegação fixo no topo */}
-        <header className="bg-black border-b border-gray-700 px-4 sticky top-0 z-40 h-[65px] flex items-center">
+        <header className="bg-orange-950/90 backdrop-blur border-b border-orange-800/60 px-4 sticky top-0 z-40 h-[65px] flex items-center">
           <div className="flex items-center justify-between w-full">
             {/* Botão voltar */}
             <button
               onClick={() => (window.location.href = "/inicio")}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10 transition-all duration-200 hover:scale-105 hover:bg-gray-800 text-gray-300"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10 transition-all duration-200 hover:scale-105 hover:bg-green-800/60 text-white"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -257,16 +281,16 @@ function PrivacyBlackPageContent() {
                 <div className="flex items-center gap-[0.1rem] min-w-fit">
                   <div className="flex items-center justify-center w-8 h-8">
                     <Image
-                      src="/image.png"
-                      alt="Privacy Black Icon"
-                      width={32}
-                      height={32}
+                      src="/laranjinha.png"
+                      alt="Laranjinha Midias Icon"
+                      width={40}
+                      height={40}
                       className="object-contain"
                     />
                   </div>
                   <div className="flex flex-col">
                     <h1 className="text-2xl font-bold italic leading-tight font-['Poppins',sans-serif] whitespace-nowrap">
-                      <span className="text-white">Privacy Black </span>
+                      <span className="text-orange-50">Laranjinha Midias </span>
                     </h1>
                   </div>
                 </div>
@@ -274,7 +298,7 @@ function PrivacyBlackPageContent() {
             </div>
             {/* Botão direito (globo) */}
             <div className="flex items-center relative">
-              <button className="gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-16 w-16 flex items-center justify-center transition-all duration-200 hover:scale-105 text-gray-300">
+              <button className="gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-16 w-16 flex items-center justify-center transition-all duration-200 hover:scale-105 text-white">
                 <Globe className="h-6 w-6" />
               </button>
             </div>
@@ -334,7 +358,7 @@ function PrivacyBlackPageContent() {
           </div>
           {/* Foto de perfil destacada */}
           <div className="absolute -bottom-[66px] left-4 z-20 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-            <div className="h-[132px] w-[132px] border-4 border-white rounded-full overflow-hidden transition-transform duration-200 hover:scale-105 bg-gray-200 relative">
+            <div className="h-[132px] w-[132px] border-4 border-orange-200/60 rounded-full overflow-hidden transition-transform duration-200 hover:scale-105 bg-orange-100 relative">
               {" "}
               <Image
                 alt={currentModel.name}
@@ -352,7 +376,7 @@ function PrivacyBlackPageContent() {
           {" "}
           {/* Título e Verificado */}
           <div className="flex items-center gap-1 mb-1">
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-orange-50">
               {currentModel.name}
             </h1>
             {currentModel.verified && (
@@ -360,14 +384,14 @@ function PrivacyBlackPageContent() {
             )}
           </div>
           {/* Username e mensagem */}
-          <p className="text-gray-300 mb-2">{currentModel.username}</p>
-          <p className="text-gray-300 mb-4">
+          <p className="text-orange-100 mb-2">{currentModel.username}</p>
+          <p className="text-orange-100 mb-4">
             Assine qualquer plano e desbloqueie todas modelos do site!!
           </p>
-          <div className="h-[0.3rem] bg-gray-100 my-4 -mx-4" />
+          <div className="h-[0.3rem] bg-orange-200/30 my-4 -mx-4" />
           {/* Botão de Assinatura */}
           <div className="mb-0">
-            <h3 className="text-[16px] font-medium text-white mb-3">
+            <h3 className="text-[16px] font-medium text-orange-50 mb-3">
               Assinaturas
             </h3>{" "}
             <div
@@ -375,7 +399,7 @@ function PrivacyBlackPageContent() {
               className="w-full h-[60px] rounded-[30px] px-[25px] flex items-center justify-between text-white font-light text-[15px] transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
               style={{
                 background:
-                  "linear-gradient(45deg, rgb(245, 129, 112), rgb(249, 175, 119))",
+                  "linear-gradient(45deg, rgb(34, 197, 94), rgb(22, 163, 74))",
               }}
             >
               <Lock className="h-5 w-5 mr-2" />
@@ -383,15 +407,15 @@ function PrivacyBlackPageContent() {
               <ExternalLink className="h-5 w-5 ml-2" />
             </div>
           </div>
-          <div className="h-[0.3rem] bg-gray-100 my-4 -mx-4" />{" "}
+          <div className="h-[0.3rem] bg-orange-200/30 my-4 -mx-4" />{" "}
           {/* Botões de navegação */}
           <div className="flex gap-x-1">
             <button
               onClick={() => setActiveTab("posts")}
               className={`flex-1 py-3 text-center font-medium rounded-t-lg focus:outline-none transition-all duration-200 ${
                 activeTab === "posts"
-                  ? "bg-orange-900 text-orange-200 scale-[1.02]"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  ? "bg-green-600 text-white scale-[1.02]"
+                  : "bg-green-500/50 text-green-100 hover:bg-green-600/60"
               }`}
             >
               {currentModel.posts_count} postagens
@@ -400,8 +424,8 @@ function PrivacyBlackPageContent() {
               onClick={() => setActiveTab("media")}
               className={`flex-1 py-3 text-center font-medium rounded-t-lg focus:outline-none transition-all duration-200 ${
                 activeTab === "media"
-                  ? "bg-orange-900 text-orange-200 scale-[1.02]"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  ? "bg-green-600 text-white scale-[1.02]"
+                  : "bg-green-500/50 text-green-100 hover:bg-green-600/60"
               }`}
             >
               {currentModel.total_media_count} mídias
@@ -422,10 +446,10 @@ function PrivacyBlackPageContent() {
               <div className="flex justify-around items-center mb-3 px-4">
                 <button
                   onClick={() => setActiveFilter("all")}
-                  className={`rounded-full px-3 py-2 text-[12px] md:px-4 md:py-1 md:text-[16px] font-semibold whitespace-nowrap select-none cursor-pointer transition-all duration-200 ${
+                  className={`rounded-full px-3 py-2 text-[12px] md:px-4 md:py-1 md:text-[16px] font-light whitespace-nowrap select-none cursor-pointer transition-all duration-200 ${
                     activeFilter === "all"
-                      ? "bg-orange-900 text-orange-200 scale-105 shadow-sm"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:scale-105"
+                      ? "bg-green-600 text-white scale-105 shadow-sm"
+                      : "bg-green-500/50 text-green-100 hover:bg-green-600/60 hover:scale-105"
                   }`}
                 >
                   {currentModel.total_media_count} todos
@@ -434,8 +458,8 @@ function PrivacyBlackPageContent() {
                   onClick={() => setActiveFilter("photos")}
                   className={`rounded-full px-3 py-2 text-[12px] md:px-4 md:py-1 md:text-[16px] font-light whitespace-nowrap select-none cursor-pointer transition-all duration-200 ${
                     activeFilter === "photos"
-                      ? "bg-orange-900 text-orange-200 scale-105 shadow-sm font-semibold"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:scale-105"
+                      ? "bg-green-600 text-white scale-105 shadow-sm font-semibold"
+                      : "bg-green-500/50 text-green-100 hover:bg-green-600/60 hover:scale-105"
                   }`}
                 >
                   {currentModel.photos_count} fotos
@@ -444,8 +468,8 @@ function PrivacyBlackPageContent() {
                   onClick={() => setActiveFilter("videos")}
                   className={`rounded-full px-3 py-2 text-[12px] md:px-4 md:py-1 md:text-[16px] font-light whitespace-nowrap select-none cursor-pointer transition-all duration-200 ${
                     activeFilter === "videos"
-                      ? "bg-orange-900 text-orange-200 scale-105 shadow-sm font-semibold"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:scale-105"
+                      ? "bg-green-600 text-white scale-105 shadow-sm font-semibold"
+                      : "bg-green-500/50 text-green-100 hover:bg-green-600/60 hover:scale-105"
                   }`}
                 >
                   {currentModel.videos_count} vídeos
@@ -645,18 +669,18 @@ function PrivacyBlackPageContent() {
           )}
           {/* Banner de conteúdo exclusivo */}
           <div className="mt-6 mb-4 px-4">
-            <div className="p-4 bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-600 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="p-4 bg-gradient-to-r from-orange-900/50 to-orange-800/50 border border-orange-600/40 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
-                  <div className="h-8 w-8 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <div className="h-8 w-8 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
                     <Lock className="h-4 w-4 text-white" />
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-white mb-1">
+                  <h3 className="text-sm font-semibold text-orange-50 mb-1">
                     Conteúdo Exclusivo
                   </h3>
-                  <p className="text-xs text-gray-200 leading-relaxed">
+                  <p className="text-xs text-orange-100 leading-relaxed">
                     Para visualizar todas as postagens e mídias, você precisa
                     assinar um dos nossos planos premium.
                   </p>
@@ -664,7 +688,7 @@ function PrivacyBlackPageContent() {
                     {" "}
                     <button
                       onClick={() => (window.location.href = getCheckoutUrl())}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-medium rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 shadow-sm"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-sm"
                     >
                       <CircleDollarSign className="h-3 w-3" />
                       Ver Planos
@@ -688,7 +712,7 @@ function PrivacyBlackPageContent() {
                 role="dialog"
                 aria-labelledby="modal-title"
                 aria-describedby="modal-description"
-                className="fixed left-1/2 top-1/2 z-50 grid w-[95vw] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 bg-gray-900 rounded-xl p-6 shadow-lg sm:w-full animate-in fade-in slide-in-from-bottom-4 duration-300"
+                className="fixed left-1/2 top-1/2 z-50 grid w-[95vw] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 bg-orange-950/95 backdrop-blur rounded-xl p-6 shadow-lg sm:w-full animate-in fade-in slide-in-from-bottom-4 duration-300"
               >
                 <h2 id="modal-title" className="sr-only">
                   Conteúdo Exclusivo
@@ -696,17 +720,17 @@ function PrivacyBlackPageContent() {
 
                 <div className="flex items-start gap-3 mb-4">
                   <div className="flex-shrink-0 mt-0.5">
-                    <div className="h-10 w-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <div className="h-10 w-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
                       <Lock className="h-5 w-5 text-white" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-2">
+                    <h3 className="text-lg font-semibold text-orange-50 mb-2">
                       Conteúdo Exclusivo!
                     </h3>
                     <p
                       id="modal-description"
-                      className="text-sm text-gray-200 leading-relaxed"
+                      className="text-sm text-orange-100 leading-relaxed"
                     >
                       Para visualizar todas as mídias e postagens de{" "}
                       <b>todas modelos</b>, você precisa assinar um dos nossos
@@ -718,14 +742,14 @@ function PrivacyBlackPageContent() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => (window.location.href = getCheckoutUrl())}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 shadow-sm"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-sm"
                   >
                     <CircleDollarSign className="h-4 w-4" />
                     Ver Planos
                   </button>
                   <button
                     onClick={() => setIsPremiumModalOpen(false)}
-                    className="px-4 py-2 text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors duration-200"
+                    className="px-4 py-2 text-green-200 text-sm font-medium rounded-lg hover:bg-green-800/60 transition-colors duration-200"
                   >
                     Fechar
                   </button>
@@ -752,10 +776,10 @@ function LoadingFallback() {
 }
 
 // Main export with Suspense wrapper
-export default function PrivacyBlackPage() {
+export default function LaranjinhaMidiasPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <PrivacyBlackPageContent />
+      <LaranjinhaMidiasPageContent />
     </Suspense>
   );
 }

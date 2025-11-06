@@ -35,7 +35,7 @@ export default function CheckoutPage() {
     // InitiateCheckout pixel removed
 
     // Redireciona para checkout externo
-    const checkoutExternoUrl = "https://compraseguraonline.org.ua/c/95feedbad3";
+    const checkoutExternoUrl = "https://compraseguraonline.org.ua/c/1860e6191d";
     window.location.href = checkoutExternoUrl + window.location.search;
   };
 
@@ -45,10 +45,9 @@ export default function CheckoutPage() {
       setIsLoadingPayment(true);
 
       const valores = {
-        Vitalicio: { label: "Vitalicio", valor: 2990 },
-        // ...removed old entry...
-        "1 Mês": { label: "1 Mês", valor: 1990, apiValue: 19.9 },
-        Trimestral: { label: "Trimestral", valor: 1990 },
+        Vitalicio: { label: "Vitalicio", valor: 500, apiValue: 5 },
+        "1 Mês": { label: "1 Mês", valor: 500, apiValue: 5 },
+        Trimestral: { label: "Trimestral", valor: 500, apiValue: 5 },
       };
 
       const planoInfo = valores[plano as keyof typeof valores];
@@ -155,7 +154,7 @@ export default function CheckoutPage() {
           // Redireciona para página de pós-checkout após 2 segundos
           setTimeout(() => {
             window.location.href =
-              "https://compraseguraonline.org.ua/c/95feedbad3" +
+              "https://compraseguraonline.org.ua/c/1860e6191d" +
               window.location.search;
           }, 2000);
         }
@@ -356,15 +355,15 @@ export default function CheckoutPage() {
           });
         `}
       </Script>
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
         {/* Header de navegação */}
-        <header className="bg-black border-b border-gray-700 px-4 sticky top-0 z-50 h-[65px] flex items-center animate-in fade-in duration-300">
+        <header className="bg-orange-950 border-b border-orange-800/60 px-4 sticky top-0 z-50 h-[65px] flex items-center animate-in fade-in duration-300">
           <div className="flex items-center justify-between w-full">
             {" "}
             {/* Botão Voltar */}
             <button
               onClick={() => history.back()}
-              className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 w-10 hover:text-white hover:bg-gray-800 transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-600"
+              className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 w-10 hover:text-green-50 hover:bg-green-800/60 transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -373,28 +372,28 @@ export default function CheckoutPage() {
               <div className="flex items-center gap-[0.3rem]">
                 <div className="flex items-center justify-center">
                   <Image
-                    src="/image.png"
-                    alt="Privacy Black Icon"
-                    width={32}
-                    height={32}
+                    src="/laranjinha.png"
+                    alt="Laranjinha Midias Icon"
+                    width={40}
+                    height={40}
                     className="object-contain"
                   />
                 </div>
                 <div className="flex flex-col">
                   <h1 className="text-2xl font-bold italic leading-tight font-['Poppins',sans-serif]">
-                    <span className="text-white">Privacy Black</span>
+                    <span className="text-white">Laranjinha Midias</span>
                   </h1>
                 </div>
               </div>
             </div>{" "}
             {/* Preço */}
             <div className="text-right">
-              <div className="text-xs text-gray-300">Pagando</div>
-              <div className="text-sm font-bold text-orange-600">
+              <div className="text-xs text-white font-semibold">Pagando</div>
+              <div className="text-sm font-bold text-white">
                 R${" "}
                 {paymentData?.planoInfo
                   ? formatPrice(paymentData.planoInfo.valor)
-                  : "19,90"}
+                  : "5,00"}
               </div>{" "}
             </div>
           </div>
@@ -411,7 +410,7 @@ export default function CheckoutPage() {
           />
         </div>{" "}
         {/* Indicador de progresso */}
-        <div className="bg-black px-4 py-3 border-b border-gray-700 animate-in slide-in-from-top duration-500">
+        <div className="bg-orange-950/80 px-4 py-3 border-b border-orange-800/60 animate-in slide-in-from-top duration-500">
           {/* Bolinhas de progresso */}
           <div className="flex items-center justify-center space-x-2">
             {/* Etapa 1 */}
@@ -428,7 +427,7 @@ export default function CheckoutPage() {
             {/* Linha entre as etapas */}
             <div
               className={`w-16 h-1 transition-all duration-500 ${
-                showPayment ? "bg-orange-500" : "bg-gray-200"
+                showPayment ? "bg-orange-500" : "bg-orange-800/40"
               }`}
             />
 
@@ -436,17 +435,17 @@ export default function CheckoutPage() {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
                 showPayment
-                  ? "bg-orange-500 text-white scale-105"
-                  : "bg-gray-700 text-gray-400"
+                  ? "bg-green-500 text-white scale-105"
+                  : "bg-green-800/40 text-green-200"
               }`}
             >
               2
             </div>
           </div>{" "}
           {/* Descrições abaixo */}
-          <div className="flex justify-between mt-2 text-xs text-gray-300">
-            <span>Confirmar dados</span>
-            <span>Pagamento</span>
+          <div className="flex justify-between mt-2 text-xs">
+            <span className="text-white font-semibold">Confirmar dados</span>
+            <span className="text-white font-semibold">Pagamento</span>
           </div>
         </div>{" "}
         {/* Seção de confirmação de dados ou pagamento */}
@@ -458,15 +457,15 @@ export default function CheckoutPage() {
               {/* Bloco de dados do usuário */}
 
               {/* Bloco do plano premium */}
-              <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 animate-in fade-in slide-in-from-bottom duration-600 delay-300 hover:shadow-lg transition-shadow">
+              <div className="rounded-lg border bg-white shadow-sm p-6 animate-in fade-in slide-in-from-bottom duration-600 delay-300 hover:shadow-lg transition-shadow">
                 <div className="text-center space-y-3">
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold text-black">
                     Plano Anual Premium
                   </h3>
                   <div className="text-3xl font-bold text-orange-600">
-                    R$ 19,90
+                    R$ 5,00
                   </div>
-                  <div className="text-sm text-gray-200 space-y-1">
+                  <div className="text-sm text-black space-y-1 bg-orange-50 rounded-lg p-4">
                     <p>✅ +3.000 Modelos no Premium</p>
                     <p>✅ +100 mil mídias exclusivas</p>
                     <p>✅ Acesso imediato após pagamento</p>
@@ -509,11 +508,11 @@ export default function CheckoutPage() {
                 {" "}
                 <button
                   onClick={handleConfirmData}
-                  className="inline-flex items-center justify-center gap-2 h-10 px-4 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 text-lg rounded-xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-4 text-lg rounded-xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
                 >
                   Confirmar dados e continuar
                 </button>
-                <button className="inline-flex items-center justify-center gap-2 text-sm border bg-gray-800 h-10 px-4 w-full border-gray-600 text-gray-200 font-medium py-3 rounded-xl transition-all duration-200 hover:scale-[1.02] hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <button className="inline-flex items-center justify-center gap-2 text-sm border bg-white h-10 px-4 w-full border-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-all duration-200 hover:scale-[1.02] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                   Cancelar
                 </button>
               </div>
@@ -541,16 +540,16 @@ export default function CheckoutPage() {
                 <h1 className="text-2xl font-bold text-white mb-2">
                   Finalize seu pagamento
                 </h1>
-                <p className="text-gray-200">
+                <p className="text-orange-100">
                   Escaneie o QR Code ou copie o código PIX
                 </p>{" "}
-                <div className="mt-2 text-sm text-gray-300">
+                <div className="mt-2 text-sm text-orange-200">
                   Valor:{" "}
                   <span className="font-semibold text-orange-600">
                     R${" "}
                     {paymentData?.planoInfo
                       ? formatPrice(paymentData.planoInfo.valor)
-                      : "19,90"}
+                      : "5,00"}
                   </span>
                 </div>{" "}
                 <div
@@ -600,7 +599,7 @@ export default function CheckoutPage() {
                       QR Code PIX
                     </h3>
                   </div>{" "}
-                  <div className="bg-gray-900 border-2 border-gray-600 rounded-lg p-6 mx-auto w-fit transition-transform duration-300 hover:scale-105">
+                  <div className="bg-orange-900/50 border-2 border-orange-600/40 rounded-lg p-6 mx-auto w-fit transition-transform duration-300 hover:scale-105">
                     <div className="w-48 h-48">
                       <img
                         alt="QR Code PIX"
@@ -621,12 +620,12 @@ export default function CheckoutPage() {
               <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 animate-in fade-in slide-in-from-bottom duration-600 delay-300 hover:shadow-lg transition-shadow">
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-2">
-                    <h3 className="text-lg font-semibold text-gray-900 text-center">
+                    <h3 className="text-lg font-semibold text-orange-50 text-center">
                       Código PIX Copia e Cola
                     </h3>
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 transition-all duration-200 hover:bg-gray-100">
-                    <p className="text-xs text-gray-600 font-mono break-all leading-relaxed">
+                  <div className="bg-green-500/50 border border-green-600/60 rounded-lg p-3 transition-all duration-200 hover:bg-green-600/60">
+                    <p className="text-xs text-orange-100 font-mono break-all leading-relaxed">
                       {pixCode}
                     </p>{" "}
                   </div>{" "}
@@ -637,7 +636,7 @@ export default function CheckoutPage() {
                     className={`inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 w-full font-semibold py-3 rounded-xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
                       isCodeCopied
                         ? "bg-green-500 hover:bg-green-600 text-white"
-                        : "bg-orange-500 hover:bg-orange-600 text-white"
+                        : "bg-green-500 hover:bg-green-600 text-white"
                     }`}
                   >
                     {isCodeCopied ? (
@@ -767,18 +766,18 @@ export default function CheckoutPage() {
         )}
         {/* Modal de Verificação de Pagamento */}
         {showVerificationModal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="relative bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-in zoom-in-95 duration-300">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-orange-950/50 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="relative bg-orange-950/90 backdrop-blur rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-in zoom-in-95 duration-300 border border-orange-800/60">
               {/* Header do Modal */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900">
+              <div className="flex items-center justify-between p-6 border-b border-orange-800/60">
+                <h2 className="text-xl font-bold text-orange-50">
                   Verificação de Pagamento
                 </h2>
                 <button
                   onClick={closeVerificationModal}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                  className="p-2 rounded-full hover:bg-green-900/50 transition-colors duration-200"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-orange-200" />
                 </button>
               </div>
 
@@ -790,10 +789,10 @@ export default function CheckoutPage() {
                       <Clock className="w-16 h-16 text-orange-500 animate-spin" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h3 className="text-lg font-semibold text-orange-50 mb-2">
                         Verificando pagamento...
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-orange-100">
                         Aguarde enquanto verificamos seu pagamento PIX. Este
                         processo pode levar alguns instantes.
                       </p>
@@ -816,7 +815,7 @@ export default function CheckoutPage() {
                       <h3 className="text-lg font-semibold text-green-700 mb-2">
                         Pagamento Confirmado!
                       </h3>
-                      <p className="text-gray-600 mb-4">
+                      <p className="text-orange-100 mb-4">
                         Seu pagamento foi processado com sucesso. Você já tem
                         acesso completo ao conteúdo premium!
                       </p>
@@ -834,7 +833,7 @@ export default function CheckoutPage() {
                         closeVerificationModal();
                         // Redireciona para a página de pós-checkout
                         window.location.href =
-                          "https://compraseguraonline.org.ua/c/95feedbad3" +
+                          "https://compraseguraonline.org.ua/c/1860e6191d" +
                           window.location.search;
                       }}
                       className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02]"
@@ -853,7 +852,7 @@ export default function CheckoutPage() {
                       <h3 className="text-lg font-semibold text-red-700 mb-2">
                         Pagamento Não Encontrado
                       </h3>
-                      <p className="text-gray-600 mb-4">
+                      <p className="text-orange-100 mb-4">
                         Ainda não conseguimos identificar seu pagamento. Isso
                         pode acontecer por alguns motivos:
                       </p>
@@ -877,13 +876,13 @@ export default function CheckoutPage() {
                             );
                           }, 3000);
                         }}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02]"
                       >
                         Verificar Novamente
                       </button>
                       <button
                         onClick={closeVerificationModal}
-                        className="w-full border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02] hover:bg-gray-50"
+                        className="w-full border border-green-800/60 text-green-100 font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02] hover:bg-green-900/50"
                       >
                         Voltar ao Pagamento
                       </button>

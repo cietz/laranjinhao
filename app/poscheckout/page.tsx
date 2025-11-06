@@ -140,15 +140,14 @@ export default function PosCheckout() {
                   <p className="text-xl md:text-2xl text-orange-100 mb-6">
                     Bem-vindo ao{" "}
                     <span className="text-white font-black bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent">
-                      Privacy Black Premium
+                      Laranjinha Midias Premium
                     </span>
                     !
                   </p>
                   <p className="text-lg text-gray-200 leading-relaxed">
                     Seu acesso VIP foi ativado com sucesso!
                     <br />
-                    Agora você faz parte da comunidade mais exclusiva da
-                    internet.
+                    Resgate seu acesso no botão abaixo
                   </p>
                 </div>
 
