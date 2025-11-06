@@ -381,7 +381,14 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex flex-col">
                   <h1 className="text-2xl font-bold italic leading-tight font-['Poppins',sans-serif]">
-                    <span className="text-white">Laranjinha Midias</span>
+                    <span 
+                      className="text-white"
+                      style={{
+                        fontFamily: "'Bubblegum Sans', cursive, sans-serif",
+                      }}
+                    >
+                      Laranjinha Midias
+                    </span>
                   </h1>
                 </div>
               </div>
