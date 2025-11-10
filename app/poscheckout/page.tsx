@@ -79,6 +79,8 @@ export default function PosCheckout() {
         data-utmify-prevent-xcod-sck
         data-utmify-prevent-subids
         strategy="afterInteractive"
+        async
+        defer
       />
       <div className="min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-orange-400 text-white relative overflow-hidden">
         {/* Animated background elements */}

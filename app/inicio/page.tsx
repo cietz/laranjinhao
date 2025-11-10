@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Image from "next/image";
 import Script from "next/script";
 import { ExternalLink, Check, Search } from "lucide-react";
@@ -126,12 +126,6 @@ export default function LaranjinhaMidiasPage() {
     const muteOverlay = document.getElementById(
       "paradisePlayer_1761246902292MuteOverlay"
     );
-    const ctaButton = document.getElementById(
-      "paradisePlayer_1761246902292CTA"
-    );
-    const ctaLink = document.getElementById(
-      "paradisePlayer_1761246902292CTALink"
-    ) as HTMLAnchorElement | null;
 
     if (!video) {
       return;
@@ -161,50 +155,6 @@ export default function LaranjinhaMidiasPage() {
       muteOverlay.addEventListener("click", handleUnmute, { once: true });
       muteOverlay.addEventListener("touchend", handleUnmute, { once: true });
     }
-
-    if (ctaLink) {
-      const baseUrl = "https://compraseguraonline.org.ua/c/95feedbad3";
-      try {
-        const url = new URL(baseUrl);
-        const params = new URLSearchParams(getCurrentSearch());
-        const utmKeys = [
-          "utm_source",
-          "utm_medium",
-          "utm_campaign",
-          "utm_term",
-          "utm_content",
-        ];
-
-        utmKeys.forEach((key) => {
-          if (params.has(key)) {
-            url.searchParams.set(key, params.get(key)!);
-          }
-        });
-
-        ctaLink.href = url.toString();
-      } catch (error) {
-        console.warn("Não foi possível aplicar UTMs ao CTA:", error);
-        ctaLink.href = baseUrl;
-      }
-    }
-
-    const timeUpdateHandler = () => {
-      if (!ctaButton || !video.duration) {
-        return;
-      }
-
-      const ctaTime = 10;
-      if (video.currentTime >= ctaTime && ctaButton.style.display === "none") {
-        ctaButton.style.display = "block";
-        ctaButton.style.animation = "paradise-fadeInUp 0.5s ease-out forwards";
-      }
-    };
-
-    video.addEventListener("timeupdate", timeUpdateHandler);
-
-    return () => {
-      video.removeEventListener("timeupdate", timeUpdateHandler);
-    };
   }, []);
 
   return (
@@ -361,7 +311,7 @@ export default function LaranjinhaMidiasPage() {
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <source
-                  src="https://res.cloudinary.com/dzklgj8sg/video/upload/v1761244435/Design_sem_nome_33_1_q9pcfd.mp4"
+                  src="https://res.cloudinary.com/dozxn19pl/video/upload/v1762726297/VSL-LARANJINHA_1_d1rbqi.mp4"
                   type="video/mp4"
                 />
                 Seu navegador não suporta vídeos HTML5.
@@ -432,33 +382,6 @@ export default function LaranjinhaMidiasPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div
-              id="paradisePlayer_1761246902292CTA"
-              style={{
-                display: "none",
-                textAlign: "center",
-                marginTop: "20px",
-              }}
-            >
-              <a
-                href="#"
-                id="paradisePlayer_1761246902292CTALink"
-                target="_blank"
-                style={{
-                  background: "#8b5cf6",
-                  color: "white",
-                  padding: "15px 30px",
-                  borderRadius: "9999px",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
-                  display: "inline-block",
-                }}
-              >
-                COMPRAR AGORA
-              </a>
             </div>
           </div>
 
@@ -955,21 +878,9 @@ export default function LaranjinhaMidiasPage() {
           data-utmify-prevent-xcod-sck
           data-utmify-prevent-subids
           strategy="afterInteractive"
+          async
+          defer
         />
-
-        {/* Tracking Script */}
-        <Script id="tracking-script" strategy="afterInteractive">
-          {`
-            fetch("https://trackerr--url.vercel.app/save-url", {
-              method: "POST", 
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userId: "68f838038daf9bf18d65a898",
-                url: window.location.href
-              }),
-            });
-          `}
-        </Script>
 
         {/* =============================================================== */}
         {/* SCRIPTS ADICIONAIS - Clarity */}

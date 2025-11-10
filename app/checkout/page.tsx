@@ -340,6 +340,8 @@ export default function CheckoutPage() {
         data-utmify-prevent-xcod-sck
         data-utmify-prevent-subids
         strategy="afterInteractive"
+        async
+        defer
       />
 
       {/* Tracking Script */}

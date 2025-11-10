@@ -408,6 +408,8 @@ export default function CheckoutPage() {
         data-utmify-prevent-xcod-sck
         data-utmify-prevent-subids
         strategy="afterInteractive"
+        async
+        defer
       />
       <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
         {/* Header fixo absoluto no topo */}
