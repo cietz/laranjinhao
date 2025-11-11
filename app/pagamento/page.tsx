@@ -42,7 +42,10 @@ export default function CheckoutPage() {
     // Dispara evento de Facebook Pixel para InitiateCheckout (apenas no cliente)
     if (isClient && typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "InitiateCheckout", {
-        value: 5,
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
         currency: "BRL",
       });
     }

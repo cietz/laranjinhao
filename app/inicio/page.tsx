@@ -113,6 +113,51 @@ export default function LaranjinhaMidiasPage() {
     window.location.href = buildModelUrl(modelId);
   };
 
+  const handleAddToCart = () => {
+    // Dispara evento AddToCart do Meta Pixel
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "AddToCart", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
+        currency: "BRL",
+      });
+    }
+    // Redireciona para checkout
+    window.location.href = getCheckoutUrl();
+  };
+
+  const handleUnlockAllProfiles = () => {
+    // Dispara evento AddToCart do Meta Pixel
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "AddToCart", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
+        currency: "BRL",
+      });
+    }
+    // Redireciona para checkout
+    window.location.href = getCheckoutUrl();
+  };
+
+  const handleSubscribePremium = () => {
+    // Dispara evento AddToCart do Meta Pixel
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "AddToCart", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
+        currency: "BRL",
+      });
+    }
+    // Redireciona para checkout
+    window.location.href = getCheckoutUrl();
+  };
+
   const filteredModels = allModels.filter(
     (model) =>
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -386,7 +431,7 @@ export default function LaranjinhaMidiasPage() {
           </div>
 
           <button
-            onClick={() => (window.location.href = getCheckoutUrl())}
+            onClick={handleAddToCart}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg"
             type="button"
           >
@@ -561,7 +606,10 @@ export default function LaranjinhaMidiasPage() {
             <Dialog>
               <DialogTitle className="hidden">{t("want.more")}</DialogTitle>
               <DialogTrigger asChild>
-                <button className="flex items-center gap-4 px-12 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-full hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg">
+                <button
+                  onClick={handleUnlockAllProfiles}
+                  className="flex items-center gap-4 px-12 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-full hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -698,9 +746,7 @@ export default function LaranjinhaMidiasPage() {
                     {/* Botões */}
                     <div className="flex flex-col gap-2">
                       <button
-                        onClick={() =>
-                          (window.location.href = getCheckoutUrl())
-                        }
+                        onClick={handleUnlockAllProfiles}
                         className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:scale-105 transition-all shadow-lg"
                       >
                         <svg
@@ -812,7 +858,7 @@ export default function LaranjinhaMidiasPage() {
                   </div>
 
                   <button
-                    onClick={() => (window.location.href = getCheckoutUrl())}
+                    onClick={handleSubscribePremium}
                     className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
                     type="button"
                   >
@@ -871,33 +917,30 @@ export default function LaranjinhaMidiasPage() {
         />
 
         {/* =============================================================== */}
-        {/* SCRIPTS ADICIONAIS - UTMify */}
+        {/* SCRIPTS ADICIONAIS - Meta Pixel */}
         {/* =============================================================== */}
-        <Script
-          src="https://cdn.utmify.com.br/scripts/utms/latest.js"
-          data-utmify-prevent-xcod-sck
-          data-utmify-prevent-subids
-          strategy="afterInteractive"
-          async
-          defer
-        />
-
-        {/* =============================================================== */}
-        {/* SCRIPTS ADICIONAIS - Clarity */}
-        {/* =============================================================== */}
-        <Script
-          id="clarity-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-      (function(c,l,a,r,i,t,y){
-          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-      })(window, document, "clarity", "script", "rzscovlzzv");
-    `,
-          }}
-        />
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '814735554702486');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=814735554702486&ev=PageView&noscript=1"
+          />
+        </noscript>
 
         {/* Paradise Player Styles */}
         <style jsx global>{`

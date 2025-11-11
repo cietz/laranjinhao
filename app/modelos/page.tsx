@@ -184,6 +184,38 @@ function LaranjinhaMidiasPageContent() {
       isTelegram
     )}`;
   };
+
+  // Função para disparar evento do Meta Pixel e redirecionar
+  const handleUnlockContent = () => {
+    // Dispara evento AddToCart do Meta Pixel
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "AddToCart", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
+        currency: "BRL",
+      });
+    }
+    // Redireciona para checkout
+    window.location.href = getCheckoutUrl();
+  };
+
+  const handleViewPlans = () => {
+    // Dispara evento AddToCart do Meta Pixel
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "AddToCart", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
+        currency: "BRL",
+      });
+    }
+    // Redireciona para checkout
+    window.location.href = getCheckoutUrl();
+  };
+
   // Carrega os dados da modelo baseado no ID da URL
   useEffect(() => {
     const modelId = searchParams.get("id");
@@ -397,7 +429,7 @@ function LaranjinhaMidiasPageContent() {
               Assinaturas
             </h3>{" "}
             <div
-              onClick={() => (window.location.href = getCheckoutUrl())}
+              onClick={handleUnlockContent}
               className="w-full h-[60px] rounded-[30px] px-[25px] flex items-center justify-between text-white font-light text-[15px] transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
               style={{
                 background:
@@ -689,7 +721,7 @@ function LaranjinhaMidiasPageContent() {
                   <div className="mt-3">
                     {" "}
                     <button
-                      onClick={() => (window.location.href = getCheckoutUrl())}
+                      onClick={handleViewPlans}
                       className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-sm"
                     >
                       <CircleDollarSign className="h-3 w-3" />
@@ -743,7 +775,7 @@ function LaranjinhaMidiasPageContent() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => (window.location.href = getCheckoutUrl())}
+                    onClick={handleViewPlans}
                     className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-105 shadow-sm"
                   >
                     <CircleDollarSign className="h-4 w-4" />
@@ -761,6 +793,32 @@ function LaranjinhaMidiasPageContent() {
           )}
         </div>
       </div>
+
+      {/* =============================================================== */}
+      {/* SCRIPTS ADICIONAIS - Meta Pixel */}
+      {/* =============================================================== */}
+      <Script id="meta-pixel" strategy="afterInteractive">
+        {`
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '814735554702486');
+          fbq('track', 'PageView');
+        `}
+      </Script>
+      <noscript>
+        <img
+          height="1"
+          width="1"
+          style={{ display: "none" }}
+          src="https://www.facebook.com/tr?id=814735554702486&ev=PageView&noscript=1"
+        />
+      </noscript>
     </>
   );
 }

