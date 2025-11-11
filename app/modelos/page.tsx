@@ -193,7 +193,7 @@ function LaranjinhaMidiasPageContent() {
         content_name: "Plano Anual Premium",
         content_ids: ["plano_anual_premium"],
         content_type: "product",
-        value: 5.0,
+        value: 19.9,
         currency: "BRL",
       });
     }
@@ -208,7 +208,7 @@ function LaranjinhaMidiasPageContent() {
         content_name: "Plano Anual Premium",
         content_ids: ["plano_anual_premium"],
         content_type: "product",
-        value: 5.0,
+        value: 19.9,
         currency: "BRL",
       });
     }

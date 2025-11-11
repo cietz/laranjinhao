@@ -120,7 +120,7 @@ export default function LaranjinhaMidiasPage() {
         content_name: "Plano Anual Premium",
         content_ids: ["plano_anual_premium"],
         content_type: "product",
-        value: 5.0,
+        value: 19.9,
         currency: "BRL",
       });
     }
@@ -135,7 +135,7 @@ export default function LaranjinhaMidiasPage() {
         content_name: "Plano Anual Premium",
         content_ids: ["plano_anual_premium"],
         content_type: "product",
-        value: 5.0,
+        value: 19.9,
         currency: "BRL",
       });
     }
@@ -150,7 +150,7 @@ export default function LaranjinhaMidiasPage() {
         content_name: "Plano Anual Premium",
         content_ids: ["plano_anual_premium"],
         content_type: "product",
-        value: 5.0,
+        value: 19.9,
         currency: "BRL",
       });
     }
@@ -452,7 +452,7 @@ export default function LaranjinhaMidiasPage() {
               <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
               <path d="M12 18V6" />
             </svg>
-            Plano Anual R$ 5,00
+            Plano Anual R$ 19,90
           </button>
 
           {/* =============================================================== */}

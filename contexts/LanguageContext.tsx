@@ -21,7 +21,7 @@ const translations = {
     "immediate.delivery": "no site. Entrega imediata.",
 
     // Premium plan
-    "monthly.plan": "Plano Mensal - R$ 5,00",
+    "monthly.plan": "Plano Mensal - R$ 19,90",
     "guarantee.refund": "30 dias de garantia • Reembolso total",
 
     // Search
@@ -61,7 +61,7 @@ const translations = {
     "immediate.delivery": "on the site. Immediate delivery.",
 
     // Premium plan
-    "monthly.plan": "Monthly Plan - R$ 5.00",
+    "monthly.plan": "Monthly Plan - R$ 19.90",
     "guarantee.refund": "30 days guarantee • Full refund",
 
     // Search
@@ -101,7 +101,7 @@ const translations = {
     "immediate.delivery": "en el sitio. Entrega inmediata.",
 
     // Premium plan
-    "monthly.plan": "Plan Mensual - R$ 5.00",
+    "monthly.plan": "Plan Mensual - R$ 19.90",
     "guarantee.refund": "30 días de garantía • Reembolso total",
 
     // Search
