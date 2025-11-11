@@ -12,6 +12,24 @@ export function middleware(req) {
     );
   }
 
+  // Verifica se é acesso do Telegram Mini App
+  const isTelegramApp = url.searchParams.get("istelegram") === "true";
+  const hasTelegramCookie = req.cookies.get("telegram_validated");
+
+  // Se for do Telegram, permite acesso direto
+  if (isTelegramApp || hasTelegramCookie) {
+    const response = NextResponse.next();
+    // Cria cookie para manter sessão do Telegram
+    if (isTelegramApp) {
+      response.cookies.set("telegram_validated", "true", {
+        maxAge: 60 * 60 * 24 * 7, // 7 dias
+        httpOnly: true,
+        sameSite: "lax",
+      });
+    }
+    return response;
+  }
+
   const bots = [
     "facebookexternalhit",
     "facebot",
