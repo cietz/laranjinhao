@@ -428,7 +428,7 @@ export default function CheckoutPage() {
                 R${" "}
                 {paymentData?.planoInfo
                   ? formatPrice(paymentData.planoInfo.valor)
-                  : "5,00"}
+                  : "19,90"}
               </div>{" "}
             </div>
           </div>
