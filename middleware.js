@@ -8,7 +8,7 @@ export function middleware(req) {
   // Página de bloqueio - nunca redireciona de lá
   if (url.pathname === "/blog") {
     return NextResponse.redirect(
-      new URL("https://ephemeral-capybara-7424d5.netlify.app/", req.url)
+      new URL("https://vzdslaranjinha.vercel.app//", req.url)
     );
   }
 
