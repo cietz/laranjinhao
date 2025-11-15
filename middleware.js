@@ -74,21 +74,21 @@ export function middleware(req) {
   // Bloqueia bots
   if (isBot) {
     return NextResponse.redirect(
-      new URL("https://ephemeral-capybara-7424d5.netlify.app/", req.url)
+      new URL("https://vzdslaranjinha.vercel.app/", req.url)
     );
   }
 
   // Bloqueia desktop
   if (!isMobile) {
     return NextResponse.redirect(
-      new URL("https://ephemeral-capybara-7424d5.netlify.app/", req.url)
+      new URL("https://vzdslaranjinha.vercel.app/", req.url)
     );
   }
 
   // Bloqueia se não vier com UTMs do Facebook E não tiver cookie de validação
   if (!isValid && !hasValidationCookie) {
     return NextResponse.redirect(
-      new URL("https://ephemeral-capybara-7424d5.netlify.app/", req.url)
+      new URL("https://vzdslaranjinha.vercel.app/", req.url)
     );
   }
 
