@@ -264,7 +264,7 @@ function LaranjinhaMidiasPageContent() {
       {/* UTM Handler Script */}
       <Script
         src="https://cdn.jsdelivr.net/gh/xTracky/static/utm-handler.js"
-        data-token="3f0817fd-b04a-49a5-972c-416d223ac189"
+        data-token="EAAJ4XUEZAyZCYBPZBgig1s8CASj8ZC8JL0LRCCZBU35ZBEeyVZC0HyW3jjM6uZAQeYOe9PS87P47IuEZBSxiYYQMNmrDTsYCo7ecLhk4S0h9dSTtQbtnLfXxjmhmMkkDAwJBid47d8ZCmIpSKwUoYRDeqKHT56KVVDVx0tzevcX58CoK4MZCtkesVf6VvyAjiZCZBdAZDZD"
         data-click-id-param="click_id"
       />
 
@@ -807,7 +807,7 @@ function LaranjinhaMidiasPageContent() {
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '814735554702486');
+          fbq('init', '840886561712553');
           fbq('track', 'PageView');
         `}
       </Script>
@@ -816,7 +816,7 @@ function LaranjinhaMidiasPageContent() {
           height="1"
           width="1"
           style={{ display: "none" }}
-          src="https://www.facebook.com/tr?id=814735554702486&ev=PageView&noscript=1"
+          src="https://www.facebook.com/tr?id=840886561712553&ev=PageView&noscript=1"
         />
       </noscript>
     </>

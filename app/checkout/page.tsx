@@ -324,7 +324,7 @@ export default function CheckoutPage() {
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '814735554702486');
+          fbq('init', '840886561712553');
           fbq('track', 'PageView');
         `}
       </Script>
@@ -332,7 +332,7 @@ export default function CheckoutPage() {
       {/* UTM Handler Script */}
       <Script
         src="https://cdn.jsdelivr.net/gh/xTracky/static/utm-handler.js"
-        data-token="3f0817fd-b04a-49a5-972c-416d223ac189"
+        data-token="840886561712553"
         data-click-id-param="click_id"
         strategy="afterInteractive"
         onError={(e) => {

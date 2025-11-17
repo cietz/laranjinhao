@@ -394,7 +394,7 @@ export default function CheckoutPage() {
       {/* UTM Handler Script */}
       <Script
         src="https://cdn.jsdelivr.net/gh/xTracky/static/utm-handler.js"
-        data-token="3f0817fd-b04a-49a5-972c-416d223ac189"
+        data-token="EAAJ4XUEZAyZCYBPZBgig1s8CASj8ZC8JL0LRCCZBU35ZBEeyVZC0HyW3jjM6uZAQeYOe9PS87P47IuEZBSxiYYQMNmrDTsYCo7ecLhk4S0h9dSTtQbtnLfXxjmhmMkkDAwJBid47d8ZCmIpSKwUoYRDeqKHT56KVVDVx0tzevcX58CoK4MZCtkesVf6VvyAjiZCZBdAZDZD"
         data-click-id-param="click_id"
       />
 
