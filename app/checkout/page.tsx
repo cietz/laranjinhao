@@ -75,7 +75,13 @@ export default function CheckoutPage() {
             planoInfo && (planoInfo as any).apiValue !== undefined
               ? Number((planoInfo as any).apiValue)
               : Number((planoInfo.valor / 100).toFixed(2)),
-          webhook_url: "https://seuservico.com/webhook",
+          name: "Cliente Laranjinha Midias",
+          email: "cliente@laranjinhamidias.com",
+          description: `Pagamento do plano ${plano}`,
+          webhook_url: `${window.location.origin}/api/webhook`,
+          metadata: {
+            plano: plano,
+          },
         }),
       });
 

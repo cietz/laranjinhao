@@ -177,12 +177,10 @@ function LaranjinhaMidiasPageContent() {
     const queryString = params.toString();
     return queryString ? `?${queryString}` : "";
   };
-  // Função para obter a URL correta baseada no contexto do Telegram
+  // Função para obter a URL de pagamento
   const getCheckoutUrl = () => {
     const isTelegram = verifyIsTelegram();
-    return `${isTelegram ? "/pagamento" : "/checkout"}${buildSearchParams(
-      isTelegram
-    )}`;
+    return `/pagamento${buildSearchParams(isTelegram)}`;
   };
 
   // Função para disparar evento do Meta Pixel e redirecionar

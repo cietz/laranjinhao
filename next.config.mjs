@@ -7,8 +7,18 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Habilitar otimização de imagens para melhor performance
+    unoptimized: false,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
   },
+  // Otimizações de performance
+  poweredByHeader: false,
+  compress: true,
   // Configurações para Telegram Mini App
   async headers() {
     return [

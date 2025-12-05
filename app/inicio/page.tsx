@@ -87,9 +87,7 @@ export default function LaranjinhaMidiasPage() {
 
   const getCheckoutUrl = () => {
     const isTelegram = verifyIsTelegram();
-    return `${isTelegram ? "/pagamento" : "/checkout"}${buildSearchParams(
-      isTelegram
-    )}`;
+    return `/pagamento${buildSearchParams(isTelegram)}`;
   };
 
   const buildModelUrl = (modelId: number) => {

@@ -161,7 +161,9 @@ export default function CheckoutPage() {
             `[POLLING] Status atual: "${status}" (normalizado: "${normalizedStatus}") para pagamento ID: ${id}`
           );
 
-          if (["paid", "completed", "pago"].includes(normalizedStatus)) {
+          if (
+            ["paid", "completed", "pago", "approved"].includes(normalizedStatus)
+          ) {
             console.log(
               `[POLLING] Pagamento confirmado! Status: "${status}". Redirecionando em 2 segundos...`
             );
