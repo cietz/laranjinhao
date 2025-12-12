@@ -7,7 +7,7 @@ const PARADISE_SECRET_KEY =
   process.env.PARADISE_SECRET_KEY ||
   "sk_1024d231bf209bf83fbaf43e6c39d8034f82cea4c0c348558e0fc762a6648cd9";
 const PARADISE_PRODUCT_HASH =
-  process.env.PARADISE_PRODUCT_HASH || "produto_default";
+  process.env.PARADISE_PRODUCT_HASH || "prod_49d54b9444be7f1d";
 
 function buildParadiseHeaders() {
   return {

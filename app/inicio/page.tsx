@@ -87,9 +87,7 @@ export default function LaranjinhaMidiasPage() {
 
   const getCheckoutUrl = () => {
     const isTelegram = verifyIsTelegram();
-    return `${isTelegram ? "/pagamento" : "/checkout"}${buildSearchParams(
-      isTelegram
-    )}`;
+    return `/pagamento${buildSearchParams(isTelegram)}`;
   };
 
   const buildModelUrl = (modelId: number) => {
@@ -361,7 +359,7 @@ export default function LaranjinhaMidiasPage() {
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <source
-                  src="https://res.cloudinary.com/dzklgj8sg/video/upload/v1761244435/Design_sem_nome_33_1_q9pcfd.mp4"
+                  src="https://res.cloudinary.com/dozxn19pl/video/upload/v1762726297/VSL-LARANJINHA_1_d1rbqi.mp4"
                   type="video/mp4"
                 />
                 Seu navegador não suporta vídeos HTML5.

@@ -57,9 +57,9 @@ export default function CheckoutPage() {
       setIsLoadingPayment(true);
 
       const valores = {
-        Vitalicio: { label: "Vitalicio", valor: 500, apiValue: 5 },
-        "1 Mês": { label: "1 Mês", valor: 500, apiValue: 5 },
-        Trimestral: { label: "Trimestral", valor: 500, apiValue: 5 },
+        Vitalicio: { label: "Vitalicio", valor: 1990, apiValue: 19.9 },
+        "1 Mês": { label: "1 Mês", valor: 1990, apiValue: 19.9 },
+        Trimestral: { label: "Trimestral", valor: 1990, apiValue: 19.9 },
       };
 
       const planoInfo = valores[plano as keyof typeof valores];
@@ -158,7 +158,9 @@ export default function CheckoutPage() {
             `[POLLING] Status atual: "${status}" (normalizado: "${normalizedStatus}") para pagamento ID: ${id}`
           );
 
-          if (["paid", "completed", "pago"].includes(normalizedStatus)) {
+          if (
+            ["paid", "completed", "pago", "approved"].includes(normalizedStatus)
+          ) {
             console.log(
               `[POLLING] Pagamento confirmado! Status: "${status}". Redirecionando em 2 segundos...`
             );
@@ -454,7 +456,7 @@ export default function CheckoutPage() {
                 R${" "}
                 {paymentData?.planoInfo
                   ? formatPrice(paymentData.planoInfo.valor)
-                  : "5,00"}
+                  : "19,90"}
               </div>{" "}
             </div>
           </div>
@@ -526,7 +528,7 @@ export default function CheckoutPage() {
                     Plano Anual Premium
                   </h3>
                   <div className="text-3xl font-bold text-orange-600">
-                    R$ 5,00
+                    R$ 19,90
                   </div>
                   <div className="text-sm text-black space-y-1 bg-orange-50 rounded-lg p-4">
                     <p>✅ +3.000 Modelos no Premium</p>
@@ -639,7 +641,7 @@ export default function CheckoutPage() {
                     R${" "}
                     {paymentData?.planoInfo
                       ? formatPrice(paymentData.planoInfo.valor)
-                      : "5,00"}
+                      : "19,90"}
                   </span>
                 </div>{" "}
                 <div

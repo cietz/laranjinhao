@@ -180,9 +180,7 @@ function LaranjinhaMidiasPageContent() {
   // Função para obter a URL correta baseada no contexto do Telegram
   const getCheckoutUrl = () => {
     const isTelegram = verifyIsTelegram();
-    return `${isTelegram ? "/pagamento" : "/checkout"}${buildSearchParams(
-      isTelegram
-    )}`;
+    return `/pagamento${buildSearchParams(isTelegram)}`;
   };
   // Carrega os dados da modelo baseado no ID da URL
   useEffect(() => {
