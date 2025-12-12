@@ -39,14 +39,6 @@ export default function CheckoutPage() {
     paymentData?.qr_code ||
     "00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-426614174000520400005303986540519.905802BR5925PRIVACYCLUB DIGITAL LTDA6009SAO PAULO62070503***6304A1B2";
   const handleConfirmData = () => {
-    // Dispara evento de Facebook Pixel para InitiateCheckout (apenas no cliente)
-    if (isClient && typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", "InitiateCheckout", {
-        value: 5,
-        currency: "BRL",
-      });
-    }
-
     // Inicia o processo de pagamento
     abrirPagamento("1 Mês");
   };
@@ -404,13 +396,17 @@ export default function CheckoutPage() {
         `}
       </Script>
 
-      {/* UTMify Script */}
-      <Script
-        src="https://cdn.utmify.com.br/scripts/utms/latest.js"
-        data-utmify-prevent-xcod-sck
-        data-utmify-prevent-subids
-        strategy="afterInteractive"
-      />
+      {/* UTMify Pixel */}
+      <Script id="utmify-pixel" strategy="afterInteractive">
+        {`
+          window.pixelId = "693753db44ffe041b5456968";
+          var a = document.createElement("script");
+          a.setAttribute("async", "");
+          a.setAttribute("defer", "");
+          a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+          document.head.appendChild(a);
+        `}
+      </Script>
       <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
         {/* Header fixo absoluto no topo */}
         <header className="bg-orange-950 border-b border-orange-800/60 px-4 fixed top-0 left-0 w-full z-50 h-[65px] flex items-center animate-in fade-in duration-300">
