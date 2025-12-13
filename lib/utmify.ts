@@ -24,15 +24,15 @@ export interface UTMifyPayload {
   paymentMethod: string;
   status: string;
   createdAt: string;
-  approvedDate: string | null;
-  refundedAt: string | null;
+  approvedDate: string | null | "";
+  refundedAt: string | null | "";
   customer: {
     name: string;
     email: string;
     phone: string;
     document: string;
     country: string;
-    ip: string | null;
+    ip: string;
   };
   products: Array<{
     id: string;

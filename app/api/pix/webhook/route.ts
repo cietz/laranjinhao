@@ -182,15 +182,22 @@ async function sendParadiseToUTMify(
       statusMap[paradisePayload.status] || paradisePayload.status;
 
     // Formatar datas no padrão UTMify: YYYY-MM-DD HH:MM:SS (UTC)
-    const createdAt = paradisePayload.timestamp
-      ? formatDateForUTMify(
-          new Date(paradisePayload.timestamp.replace(" ", "T") + "Z")
-        )
-      : formatDateForUTMify(new Date());
+    // Garantir que createdAt não esteja no futuro
+    const now = new Date();
+    let createdDate = paradisePayload.timestamp
+      ? new Date(paradisePayload.timestamp.replace(" ", "T"))
+      : now;
 
-    const approvedDate =
-      paradisePayload.status === "approved" ? createdAt : null;
-    const refundedAt = paradisePayload.status === "refunded" ? createdAt : null;
+    // Se a data estiver no futuro, usar data atual
+    if (createdDate > now) {
+      createdDate = now;
+    }
+
+    const createdAt = formatDateForUTMify(createdDate);
+
+    // approvedDate deve ser string vazia "" quando não aprovado (não null)
+    const approvedDate = paradisePayload.status === "approved" ? createdAt : "";
+    const refundedAt = paradisePayload.status === "refunded" ? createdAt : "";
 
     // Build UTMify payload from Paradise data (conforme documentação oficial)
     const utmifyPayload: UTMifyPayload = {
@@ -204,10 +211,11 @@ async function sendParadiseToUTMify(
       customer: {
         name: paradisePayload.customer.name,
         email: paradisePayload.customer.email,
-        phone: paradisePayload.customer.phone || null,
-        document: paradisePayload.customer.document || null,
+        phone: paradisePayload.customer.phone || "",
+        document: paradisePayload.customer.document || "",
         country: "BR",
-        ip: storedTransaction?.customer_ip || null,
+        // customer.ip não pode ser null - usar IP da transação ou placeholder
+        ip: storedTransaction?.customer_ip || "0.0.0.0",
       },
       products: [
         {
