@@ -6,6 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Desabilita redirecionamento de trailing slash para API routes
+  skipTrailingSlashRedirect: true,
   // Configurações para Telegram Mini App
   async headers() {
     return [
