@@ -170,6 +170,19 @@ async function sendParadiseToUTMify(
   storedTransaction: Transaction | null
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
+    // Log detalhado das UTMs recebidas
+    console.log("[UTMify Paradise] UTMs recebidas:", {
+      fromWebhook: paradisePayload.tracking,
+      fromStorage: storedTransaction
+        ? {
+            utm_source: storedTransaction.utm_source,
+            utm_campaign: storedTransaction.utm_campaign,
+            utm_medium: storedTransaction.utm_medium,
+            sck: storedTransaction.sck,
+          }
+        : null,
+    });
+
     // Map Paradise status to UTMify status (conforme documentação UTMify)
     const statusMap: Record<string, string> = {
       pending: "waiting_payment",

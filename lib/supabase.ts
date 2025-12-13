@@ -3,6 +3,30 @@
  * Armazena e recupera dados de transações para tracking
  */
 
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+
+// Configuração do Supabase
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
+
+// Cliente Supabase singleton
+let supabaseClient: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient | null {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn(
+      "[Supabase] Credenciais não configuradas, usando fallback em memória"
+    );
+    return null;
+  }
+
+  if (!supabaseClient) {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  return supabaseClient;
+}
+
 // Interface para transação armazenada
 export interface Transaction {
   id?: string;
@@ -29,7 +53,7 @@ export interface Transaction {
   utm_term?: string;
 }
 
-// Simula armazenamento em memória (substituir por Supabase real em produção)
+// Fallback: armazenamento em memória (para quando Supabase não está configurado)
 const transactionsStore: Map<string, Transaction> = new Map();
 
 /**
@@ -48,15 +72,64 @@ export async function saveTransaction(
     updated_at: now,
   };
 
-  transactionsStore.set(transaction.transaction_id, storedTransaction);
+  const supabase = getSupabase();
 
-  // Se tiver external_ref, também indexar por ele
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .upsert(
+          {
+            transaction_id: storedTransaction.transaction_id,
+            external_ref: storedTransaction.external_ref,
+            status: storedTransaction.status,
+            amount: storedTransaction.amount,
+            customer_name: storedTransaction.customer_name,
+            customer_email: storedTransaction.customer_email,
+            customer_phone: storedTransaction.customer_phone,
+            customer_document: storedTransaction.customer_document,
+            customer_ip: storedTransaction.customer_ip,
+            payment_method: storedTransaction.payment_method,
+            created_at: storedTransaction.created_at,
+            updated_at: storedTransaction.updated_at,
+            paid_at: storedTransaction.paid_at,
+            src: storedTransaction.src,
+            sck: storedTransaction.sck,
+            utm_source: storedTransaction.utm_source,
+            utm_campaign: storedTransaction.utm_campaign,
+            utm_medium: storedTransaction.utm_medium,
+            utm_content: storedTransaction.utm_content,
+            utm_term: storedTransaction.utm_term,
+          },
+          { onConflict: "transaction_id" }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        console.error("[Supabase] Erro ao salvar:", error);
+        throw error;
+      }
+
+      console.log(
+        "[Supabase] Transação salva com sucesso no banco:",
+        storedTransaction.transaction_id
+      );
+      return data as Transaction;
+    } catch (error) {
+      console.error("[Supabase] Erro, usando fallback em memória:", error);
+      // Fallback para memória
+    }
+  }
+
+  // Fallback: armazenamento em memória
+  transactionsStore.set(transaction.transaction_id, storedTransaction);
   if (transaction.external_ref) {
     transactionsStore.set(`ref_${transaction.external_ref}`, storedTransaction);
   }
 
   console.log(
-    "[Supabase] Transação salva com sucesso:",
+    "[Supabase] Transação salva em memória (fallback):",
     storedTransaction.transaction_id
   );
   return storedTransaction;
@@ -70,10 +143,39 @@ export async function getTransactionById(
 ): Promise<Transaction | null> {
   console.log("[Supabase] Buscando transação por ID:", transactionId);
 
-  const transaction = transactionsStore.get(transactionId);
+  const supabase = getSupabase();
 
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("transaction_id", transactionId)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("[Supabase] Erro ao buscar:", error);
+      }
+
+      if (data) {
+        console.log(
+          "[Supabase] Transação encontrada no banco:",
+          data.transaction_id
+        );
+        return data as Transaction;
+      }
+    } catch (error) {
+      console.error("[Supabase] Erro, usando fallback em memória:", error);
+    }
+  }
+
+  // Fallback: buscar em memória
+  const transaction = transactionsStore.get(transactionId);
   if (transaction) {
-    console.log("[Supabase] Transação encontrada:", transaction.transaction_id);
+    console.log(
+      "[Supabase] Transação encontrada em memória:",
+      transaction.transaction_id
+    );
     return transaction;
   }
 
@@ -89,14 +191,38 @@ export async function getTransactionByExternalRef(
 ): Promise<Transaction | null> {
   console.log("[Supabase] Buscando transação por external_ref:", externalRef);
 
-  const transaction = transactionsStore.get(`ref_${externalRef}`);
+  const supabase = getSupabase();
 
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("external_ref", externalRef)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("[Supabase] Erro ao buscar:", error);
+      }
+
+      if (data) {
+        console.log(
+          "[Supabase] Transação encontrada no banco:",
+          data.transaction_id
+        );
+        return data as Transaction;
+      }
+    } catch (error) {
+      console.error("[Supabase] Erro, usando fallback em memória:", error);
+    }
+  }
+
+  // Fallback: buscar em memória
+  const transaction = transactionsStore.get(`ref_${externalRef}`);
   if (transaction) {
-    console.log("[Supabase] Transação encontrada:", transaction.transaction_id);
     return transaction;
   }
 
-  // Fallback: buscar em todas as transações
   for (const txn of transactionsStore.values()) {
     if (txn.external_ref === externalRef) {
       return txn;
@@ -118,15 +244,45 @@ export async function updateTransactionStatus(
   status: string,
   paidAt?: string
 ): Promise<Transaction | null> {
-  console.log(
-    "[Supabase] Atualizando status da transação:",
-    transactionId,
-    "->",
-    status
-  );
+  console.log("[Supabase] Atualizando status:", transactionId, "->", status);
 
+  const now = new Date().toISOString();
+
+  const supabase = getSupabase();
+
+  if (supabase) {
+    try {
+      const updateData: Record<string, any> = {
+        status,
+        updated_at: now,
+      };
+
+      if (paidAt) {
+        updateData.paid_at = paidAt;
+      }
+
+      const { data, error } = await supabase
+        .from("transactions")
+        .update(updateData)
+        .eq("transaction_id", transactionId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("[Supabase] Erro ao atualizar:", error);
+      }
+
+      if (data) {
+        console.log("[Supabase] Transação atualizada no banco:", transactionId);
+        return data as Transaction;
+      }
+    } catch (error) {
+      console.error("[Supabase] Erro, usando fallback em memória:", error);
+    }
+  }
+
+  // Fallback: atualizar em memória
   const transaction = transactionsStore.get(transactionId);
-
   if (!transaction) {
     console.log(
       "[Supabase] Transação não encontrada para atualizar:",
@@ -135,7 +291,6 @@ export async function updateTransactionStatus(
     return null;
   }
 
-  const now = new Date().toISOString();
   const updatedTransaction: Transaction = {
     ...transaction,
     status,
@@ -144,8 +299,10 @@ export async function updateTransactionStatus(
   };
 
   transactionsStore.set(transactionId, updatedTransaction);
-
-  console.log("[Supabase] Transação atualizada com sucesso:", transactionId);
+  console.log(
+    "[Supabase] Transação atualizada em memória (fallback):",
+    transactionId
+  );
   return updatedTransaction;
 }
 
@@ -153,14 +310,34 @@ export async function updateTransactionStatus(
  * Lista todas as transações (para debug)
  */
 export async function listTransactions(): Promise<Transaction[]> {
-  const transactions: Transaction[] = [];
+  const supabase = getSupabase();
 
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error("[Supabase] Erro ao listar:", error);
+      }
+
+      if (data) {
+        return data as Transaction[];
+      }
+    } catch (error) {
+      console.error("[Supabase] Erro, usando fallback em memória:", error);
+    }
+  }
+
+  // Fallback: listar da memória
+  const transactions: Transaction[] = [];
   for (const [key, value] of transactionsStore.entries()) {
-    // Evitar duplicatas (entries com ref_)
     if (!key.startsWith("ref_")) {
       transactions.push(value);
     }
   }
-
   return transactions;
 }

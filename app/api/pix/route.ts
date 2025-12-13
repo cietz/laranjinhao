@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { saveTransaction } from "@/lib/supabase";
 
 const PARADISE_BASE_URL = "https://multi.paradisepags.com/api/v1";
 const PARADISE_RECIPIENT_ID =
@@ -47,7 +48,7 @@ function generatePhone(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { value, description: bodyDescription } = body;
+    const { value, description: bodyDescription, tracking } = body;
 
     // Validação dos dados recebidos
     const description = bodyDescription || "Pagamento Laranjinha Midias";
@@ -220,6 +221,47 @@ export async function POST(request: NextRequest) {
     const expiresAt =
       data?.expiresAt || new Date(Date.now() + 15 * 60 * 1000).toISOString();
     const status = data?.status || "pending";
+
+    // ========================================
+    // SALVA TRANSAÇÃO NO SUPABASE COM UTMs
+    // ========================================
+    // Isso permite que o webhook recupere as UTMs quando o pagamento for aprovado
+    try {
+      // Captura o IP do cliente da requisição
+      const clientIp =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        request.headers.get("x-real-ip") ||
+        "0.0.0.0";
+
+      await saveTransaction({
+        transaction_id: transactionId,
+        external_ref: requestBody.reference,
+        status: "waiting_payment",
+        amount: valueInCents,
+        customer_name: requestBody.customer.name,
+        customer_email: requestBody.customer.email,
+        customer_phone: requestBody.customer.phone,
+        customer_document: requestBody.customer.document,
+        customer_ip: clientIp,
+        payment_method: "pix",
+        // UTMs capturadas da página de pagamento
+        src: tracking?.src || null,
+        sck: tracking?.sck || null,
+        utm_source: tracking?.utm_source || null,
+        utm_campaign: tracking?.utm_campaign || null,
+        utm_medium: tracking?.utm_medium || null,
+        utm_content: tracking?.utm_content || null,
+        utm_term: tracking?.utm_term || null,
+      });
+      console.log("[Supabase] Transação salva com UTMs:", {
+        transaction_id: transactionId,
+        utm_source: tracking?.utm_source,
+        utm_campaign: tracking?.utm_campaign,
+      });
+    } catch (saveError) {
+      console.error("[Supabase] Erro ao salvar transação:", saveError);
+      // Não falha a requisição se o salvamento falhar
+    }
 
     return NextResponse.json({
       id: transactionId,
